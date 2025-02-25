@@ -1,0 +1,31 @@
+"Como un ingeniero de software experto en integración de APIs y desarrollo modular en Python, tu tarea es completar la integración de la API de Deriv.com en el proyecto existente que ya contiene varios módulos. En este primer paso, enfócate exclusivamente en probar la conectividad a la API de Deriv.com de forma independiente, **antes de habilitar el bucle completo de trading**.
+
+Utiliza la documentación oficial y ejemplos de la librería python-deriv-api y de los siguientes recursos:
+- https://deriv-com.github.io/python-deriv-api/
+- https://github.com/deriv-com/python-deriv-api/tree/master/examples
+- https://api.deriv.com/api-explorer
+- https://developers.deriv.com/docs
+- https://deriv.com
+- https://community.deriv.com
+
+El prompt debe cumplir con lo siguiente:
+
+1. **Verificar Variables de Entorno:**  
+   - Asegurarse de que las variables de entorno (por ejemplo, DERIV_API_TOKEN_DEMO y DERIV_API_TOKEN_REAL) estén configuradas correctamente en el entorno de Replit.  
+   - Imprimir en consola los valores de estas variables (sin mostrar datos sensibles) para confirmar que se cargan adecuadamente.
+
+2. **Establecer Conexión a la API de Deriv:**  
+   - Usar la librería python-deriv-api para conectar con la API de Deriv.com mediante WebSockets.  
+   - Implementar la autenticación utilizando el token apropiado para la cuenta DEMO (o REAL, según se configure).
+   - Probar la conexión solicitando datos básicos (por ejemplo, ticks o información de precios de un activo, como "BTCUSD_frx").
+
+3. **Prueba de Conectividad Independiente:**  
+   - El módulo debe ejecutarse de manera independiente (por ejemplo, en un archivo `test_api_connectivity.py`) para probar la conectividad a la API sin activar el bucle completo de trading.  
+   - Mostrar en la consola mensajes claros de éxito o error, utilizando `print()` para facilitar la depuración.
+
+4. **Código Completo y Documentado:**  
+   - El código debe incluir comentarios explicativos en cada sección y función para que, incluso sin conocimientos avanzados, se entienda el flujo de ejecución.  
+   - Asegurarse de que el código sea autoconclusivo y listo para ejecutarse en Replit sin requerir ajustes adicionales.
+
+Genera el código completo en un solo bloque que cumpla con estos requisitos, y asegúrate de que se enfoque únicamente en la integración y prueba de conectividad de la API de Deriv.com."
+

@@ -34,7 +34,7 @@ class DataFetcher:
                 "end": "latest",
                 "granularity": interval,
                 "style": "candles",
-                "subscribe": 0
+                "req_id": self.connector._get_request_id()
             }
 
             response = await self.connector.send_request(request)
