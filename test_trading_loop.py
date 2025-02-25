@@ -9,6 +9,7 @@ from deriv_bot.data.data_fetcher import DataFetcher
 from deriv_bot.data.data_processor import DataProcessor
 from deriv_bot.strategy.model_trainer import ModelTrainer
 from deriv_bot.strategy.model_predictor import ModelPredictor
+from deriv_bot.strategy.feature_engineering import FeatureEngineer
 from deriv_bot.risk.risk_manager import RiskManager
 from deriv_bot.monitor.performance import PerformanceTracker
 from deriv_bot.monitor.logger import setup_logger
@@ -34,6 +35,7 @@ async def run_trading_simulation():
         connector = DerivConnector()
         data_fetcher = DataFetcher(connector)
         data_processor = DataProcessor()
+        feature_engineer = FeatureEngineer()
         risk_manager = RiskManager()
         mock_executor = MockOrderExecutor()
         performance_tracker = PerformanceTracker()
@@ -49,12 +51,12 @@ async def run_trading_simulation():
         # Test with EUR/USD
         symbol = "frxEURUSD"
 
-        # Fetch initial data
+        # Fetch initial data (increased to ensure enough data for features)
         logger.info(f"Fetching historical data for {symbol}")
         historical_data = await data_fetcher.fetch_historical_data(
             symbol,
             interval=60,
-            count=200  # Increased to ensure enough data after indicator calculation
+            count=500  # Increased to ensure enough data for feature calculation
         )
 
         if historical_data is None:
@@ -62,11 +64,18 @@ async def run_trading_simulation():
             return
 
         logger.info(f"Successfully fetched {len(historical_data)} candles")
-        logger.info(f"Data columns: {historical_data.columns.tolist()}")
-        logger.info(f"Sample data:\n{historical_data.head()}")
+
+        # Add enhanced features
+        historical_data = feature_engineer.calculate_features(historical_data)
+        if historical_data is None:
+            logger.error("Failed to calculate features")
+            return
+
+        logger.info(f"Calculated features. Shape: {historical_data.shape}")
+        logger.info(f"Features: {historical_data.columns.tolist()}")
 
         # Process data with shorter sequence length
-        sequence_length = 30  # Reduced from 60 to work with available data
+        sequence_length = 30
         logger.info(f"Processing data with sequence length: {sequence_length}")
 
         processed_data = data_processor.prepare_data(
@@ -85,10 +94,10 @@ async def run_trading_simulation():
 
         logger.info(f"Processed data shapes - X: {X.shape}, y: {y.shape}")
 
-        # Train model with minimal epochs for testing
-        logger.info("Training model with historical data")
+        # Train ensemble model
+        logger.info("Training ensemble models")
         model_trainer = ModelTrainer(input_shape=(X.shape[1], X.shape[2]))
-        history = model_trainer.train(X, y, epochs=5)  # Quick training for testing
+        history = model_trainer.train(X, y, epochs=10)  # Quick training for testing
 
         if not history:
             logger.error("Model training failed")
@@ -96,23 +105,26 @@ async def run_trading_simulation():
 
         logger.info("Model training completed")
 
-        # Initialize predictor with trained model
-        predictor = ModelPredictor()
-        predictor.model = model_trainer.model
+        # Save models
+        model_trainer.save_models('models')
 
-        # Run simulation loop
+        # Initialize predictor with trained models
+        predictor = ModelPredictor('models')
+
+        # Run simulation loop with confidence threshold
         logger.info("Starting trading simulation loop")
         iteration = 0
         trades_executed = 0
         successful_trades = 0
+        confidence_threshold = 0.6
 
-        while iteration < 5:  # Run 5 iterations for testing
+        while iteration < 10:  # Run 10 iterations for testing
             try:
                 # Get latest data
                 latest_data = await data_fetcher.fetch_historical_data(
                     symbol,
                     interval=60,
-                    count=100  # Fetch enough for indicator calculation
+                    count=200  # Fetch enough for feature calculation
                 )
 
                 if latest_data is None:
@@ -120,9 +132,14 @@ async def run_trading_simulation():
                     await asyncio.sleep(5)
                     continue
 
-                logger.info(f"Latest data shape: {latest_data.shape}")
+                # Calculate features
+                latest_data = feature_engineer.calculate_features(latest_data)
+                if latest_data is None:
+                    logger.warning("Failed to calculate features, retrying...")
+                    await asyncio.sleep(5)
+                    continue
 
-                # Process latest data with same sequence length
+                # Process data
                 processed_sequence = data_processor.prepare_data(
                     df=latest_data,
                     sequence_length=sequence_length
@@ -139,14 +156,15 @@ async def run_trading_simulation():
                     await asyncio.sleep(5)
                     continue
 
-                logger.info(f"Processed sequence shape: {X_latest.shape}")
-
                 # Get the last sequence for prediction
                 sequence = X_latest[-1:]
-                prediction = predictor.predict(sequence)
+                prediction_result = predictor.predict(sequence, confidence_threshold)
 
-                if prediction is not None:
-                    logger.info(f"Prediction value: {prediction:.4f}")
+                if prediction_result is not None:
+                    prediction = prediction_result['prediction']
+                    confidence = prediction_result['confidence']
+                    logger.info(f"Prediction value: {prediction:.4f} (confidence: {confidence:.2f})")
+
                     current_price = latest_data['close'].iloc[-1]
                     price_diff = prediction - current_price
                     price_change_pct = (price_diff / current_price) * 100
@@ -155,7 +173,11 @@ async def run_trading_simulation():
                     logger.info(f"Predicted price: {prediction:.5f}")
                     logger.info(f"Predicted change: {price_change_pct:.2f}%")
 
-                    # Simulate trade execution
+                    # Get prediction metrics
+                    metrics = predictor.get_prediction_metrics(sequence)
+                    logger.info(f"Prediction metrics: {metrics}")
+
+                    # Simulate trade execution if confidence is high enough
                     amount = 10.0  # Fixed amount for simulation
                     if abs(price_change_pct) >= 0.02:  # Minimum 0.02% predicted move
                         if risk_manager.validate_trade(symbol, amount, prediction):
@@ -170,10 +192,10 @@ async def run_trading_simulation():
                             )
 
                             if result:
-                                # Wait for 1 minute to get the next price (simulating contract settlement)
+                                # Wait for 1 minute to get the next price
                                 await asyncio.sleep(60)
 
-                                # Fetch latest price after waiting period
+                                # Fetch latest price
                                 next_data = await data_fetcher.fetch_historical_data(
                                     symbol,
                                     interval=60,
@@ -202,6 +224,7 @@ async def run_trading_simulation():
                                         'exit_price': next_price,
                                         'predicted_change': price_change_pct,
                                         'actual_change': actual_change_pct,
+                                        'confidence': confidence,
                                         'timestamp': datetime.now().isoformat()
                                     }
                                     performance_tracker.add_trade(trade_data)
@@ -210,9 +233,11 @@ async def run_trading_simulation():
 
                     else:
                         logger.info(f"No trade: predicted move ({price_change_pct:.2f}%) below threshold")
+                else:
+                    logger.info("No trade: prediction confidence below threshold")
 
                 iteration += 1
-                logger.info(f"Completed simulation iteration {iteration}/5")
+                logger.info(f"Completed simulation iteration {iteration}/10")
 
                 # Log performance metrics
                 if trades_executed > 0:
