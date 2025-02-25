@@ -44,11 +44,13 @@ deriv_bot/
    - Validación de operaciones
    - Control de exposición
    - Límites de pérdidas
+   - Perfiles DEMO/REAL implementados
 
 6. **Simulación de Trading (✓ Completado)**
    - Ejecución simulada de órdenes
    - Tracking de rendimiento
    - Exportación de resultados
+   - Perfil DEMO agresivo para pruebas
 
 ## Estado Actual y Logros
 
@@ -58,6 +60,7 @@ deriv_bot/
 3. ✓ Implementación básica de ML
 4. ✓ Sistema de simulación funcional
 5. ✓ Gestión de riesgo implementada
+6. ✓ Perfiles DEMO/REAL configurados
 
 ### Resultados de Simulación
 - Sistema capaz de ejecutar el ciclo completo de trading
@@ -66,45 +69,48 @@ deriv_bot/
   - Win rate
   - Profit/Loss por operación
   - Seguimiento de predicciones vs resultados reales
+  - Evaluación de confianza de predicciones
 
 ## Próximos Pasos
 
 ### Prioridades Inmediatas
-1. **Análisis de Resultados de Simulación**
-   - Revisar métricas de rendimiento
-   - Optimizar parámetros de trading
-   - Ajustar umbrales de predicción
+1. **Optimización del Modelo ML**
+   - Ajuste fino de hiperparámetros
+   - Evaluación de distintos horizontes de predicción
+   - Mejora de features técnicos
 
-2. **Mejoras del Modelo ML**
-   - Implementar estrategias avanzadas
-   - Optimizar hiperparámetros
-   - Añadir más features técnicos
-
-3. **Panel de Control**
-   - Desarrollar interfaz de monitoreo
-   - Visualización de métricas en tiempo real
+2. **Panel de Control en Tiempo Real**
+   - Desarrollo de interfaz web
+   - Visualización de métricas clave
    - Control de parámetros de trading
 
-### Pendientes Técnicos
-- Optimización del manejo de memoria
-- Mejora en la gestión de errores API
-- Documentación de código detallada
+3. **Backtesting Avanzado**
+   - Implementación de múltiples pares de divisas
+   - Análisis de correlaciones
+   - Optimización de parámetros
 
-## Prompt para Continuación
 
-Para continuar el desarrollo, utilizar el siguiente prompt:
+### Mejoras Futuras Propuestas
 
-```
-"Como ingeniero de ML especializado en trading algorítmico, necesito tu ayuda para continuar el desarrollo del bot de trading para Deriv.com. El proyecto tiene una base funcional con conexión API, procesamiento de datos y simulación de trading implementados.
+1. **Sistema de Notificaciones**
+   - Integración con Twilio para alertas SMS
+   - Notificaciones de eventos críticos
+   - Alertas de performance y riesgo
 
-Basado en los resultados de simulación guardados en 'simulation_results.csv', necesitamos:
+2. **Gestión de Riesgo Adaptativa**
+   - Ajuste dinámico de parámetros
+   - Machine Learning para gestión de riesgo
+   - Optimización de portfolio
 
-1. Analizar el rendimiento actual del modelo
-2. Implementar mejoras en la estrategia ML
-3. Desarrollar el panel de control en tiempo real
+3. **Análisis de Mercado Avanzado**
+   - Integración de análisis de sentimiento
+   - Indicadores económicos en tiempo real
+   - Correlaciones entre mercados
 
-Los archivos principales están en la estructura modular del proyecto, y las credenciales API están configuradas en las variables de entorno. ¿Podemos proceder con el análisis de los resultados de simulación para determinar las mejoras necesarias en la estrategia ML?"
-```
+4. **Automatización y Escalabilidad**
+   - Auto-optimización de parámetros
+   - Balanceo de carga
+   - Recuperación automática de errores
 
 ### Variables de Entorno Requeridas
 - DERIV_API_TOKEN_DEMO
@@ -122,16 +128,4 @@ Los archivos principales están en la estructura modular del proyecto, y las cre
 - ✓ Tests unitarios implementados
 - ✓ Pruebas de integración API
 - ✓ Simulaciones de trading verificadas
-
-## Mejoras futuras
-- Mejorar el bot de trading mediante análisis de resultados, optimización del modelo ML y desarrollo de dashboard en tiempo real
-
-- Implementar backtesting avanzado con múltiples pares de divisas
-
-- Añadir sistema de gestión de riesgo adaptativo
-
-- Integrar análisis de sentimiento del mercado
-
-- Desarrollar sistema de alertas personalizables
-
-- Implementar auto-optimización de parámetros
+- ✓ Perfiles DEMO/REAL validados

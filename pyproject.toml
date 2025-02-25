@@ -11,5 +11,6 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "scikit-learn>=1.6.1",
     "tensorflow>=2.14.0",
+    "twilio>=9.4.6",
     "websockets>=10.3",
 ]

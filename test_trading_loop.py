@@ -18,8 +18,8 @@ logger = setup_logger('trading_simulation')
 
 class MockOrderExecutor:
     """Mock order executor for simulation"""
-    async def place_order(self, symbol, contract_type, amount, duration):
-        logger.info(f"SIMULATION: Would place {contract_type} order for {symbol}, amount: {amount}")
+    async def place_order(self, symbol, contract_type, amount, duration, stop_loss_pct=None):
+        logger.info(f"SIMULATION: Would place {contract_type} order for {symbol}, amount: {amount}, stop_loss: {stop_loss_pct}%")
         return {
             'contract_id': 'mock_id_' + datetime.now().strftime('%H%M%S'),
             'transaction_id': 'mock_tx_' + datetime.now().strftime('%H%M%S'),
@@ -31,14 +31,25 @@ async def run_trading_simulation():
     """Run trading simulation with real data but mock order execution"""
     connector = None
     try:
-        # Initialize components
+        # Initialize components with DEMO profile
         connector = DerivConnector()
         data_fetcher = DataFetcher(connector)
         data_processor = DataProcessor()
         feature_engineer = FeatureEngineer()
-        risk_manager = RiskManager()
+        risk_manager = RiskManager(is_demo=True, max_position_size=200, max_daily_loss=150)  # Aggressive DEMO settings
         mock_executor = MockOrderExecutor()
         performance_tracker = PerformanceTracker()
+
+        # Log risk and strategy profiles
+        risk_profile = risk_manager.get_risk_profile()
+        logger.info("=== DEMO Trading Simulation Configuration ===")
+        logger.info(f"Risk Profile: {risk_profile}")
+        logger.info("Trading Parameters:")
+        logger.info("- Confidence Threshold: 0.6 (DEMO)")
+        logger.info("- Position Size: 20.0 (Higher for DEMO)")
+        logger.info("- Trade Duration: 30s (Faster for DEMO)")
+        logger.info("- Stop Loss: 5.0% (Wider for DEMO)")
+        logger.info("==========================================")
 
         # Connect to API
         connected = await connector.connect()
@@ -51,12 +62,12 @@ async def run_trading_simulation():
         # Test with EUR/USD
         symbol = "frxEURUSD"
 
-        # Fetch initial data (increased to ensure enough data for features)
+        # Fetch initial data
         logger.info(f"Fetching historical data for {symbol}")
         historical_data = await data_fetcher.fetch_historical_data(
             symbol,
             interval=60,
-            count=500  # Increased to ensure enough data for feature calculation
+            count=500
         )
 
         if historical_data is None:
@@ -74,7 +85,7 @@ async def run_trading_simulation():
         logger.info(f"Calculated features. Shape: {historical_data.shape}")
         logger.info(f"Features: {historical_data.columns.tolist()}")
 
-        # Process data with shorter sequence length
+        # Process data with shorter sequence length for demo
         sequence_length = 30
         logger.info(f"Processing data with sequence length: {sequence_length}")
 
@@ -111,20 +122,23 @@ async def run_trading_simulation():
         # Initialize predictor with trained models
         predictor = ModelPredictor('models')
 
-        # Run simulation loop with confidence threshold
+        # Run simulation loop with DEMO confidence threshold
         logger.info("Starting trading simulation loop")
         iteration = 0
         trades_executed = 0
         successful_trades = 0
-        confidence_threshold = 0.6
+        confidence_threshold = 0.6  # Lower threshold for DEMO
 
         while iteration < 10:  # Run 10 iterations for testing
             try:
+                logger.info(f"\n=== Iteration {iteration + 1}/10 ===")
+                logger.info(f"Current Stats - Trades: {trades_executed}, Successful: {successful_trades}")
+
                 # Get latest data
                 latest_data = await data_fetcher.fetch_historical_data(
                     symbol,
                     interval=60,
-                    count=200  # Fetch enough for feature calculation
+                    count=200
                 )
 
                 if latest_data is None:
@@ -177,9 +191,9 @@ async def run_trading_simulation():
                     metrics = predictor.get_prediction_metrics(sequence)
                     logger.info(f"Prediction metrics: {metrics}")
 
-                    # Simulate trade execution if confidence is high enough
-                    amount = 10.0  # Fixed amount for simulation
-                    if abs(price_change_pct) >= 0.02:  # Minimum 0.02% predicted move
+                    # Simulate trade execution with DEMO threshold
+                    amount = 20.0  # Higher amount for DEMO
+                    if abs(price_change_pct) >= 0.015:  # Lower threshold for DEMO
                         if risk_manager.validate_trade(symbol, amount, prediction):
                             contract_type = 'CALL' if price_diff > 0 else 'PUT'
                             logger.info(f"Placing {contract_type} order, predicted move: {price_change_pct:.2f}%")
@@ -188,11 +202,12 @@ async def run_trading_simulation():
                                 symbol,
                                 contract_type,
                                 amount,
-                                60  # 1-minute contracts for testing
+                                30,  # Shorter duration for DEMO
+                                stop_loss_pct=5.0  # Wider stop loss for DEMO
                             )
 
                             if result:
-                                # Wait for 1 minute to get the next price
+                                # Wait for contract duration
                                 await asyncio.sleep(60)
 
                                 # Fetch latest price
@@ -228,6 +243,14 @@ async def run_trading_simulation():
                                         'timestamp': datetime.now().isoformat()
                                     }
                                     performance_tracker.add_trade(trade_data)
+
+                                    # Log detailed trade performance
+                                    logger.info("\n=== Trade Performance Update ===")
+                                    logger.info(f"Win Rate: {(successful_trades/trades_executed)*100:.1f}%")
+                                    logger.info(f"Prediction Accuracy: {abs(price_change_pct - actual_change_pct):.2f}%")
+                                    stats = performance_tracker.get_statistics()
+                                    if stats:
+                                        logger.info(f"Performance Stats: {stats}")
                                 else:
                                     logger.error("Failed to fetch next price after trade")
 
@@ -239,34 +262,34 @@ async def run_trading_simulation():
                 iteration += 1
                 logger.info(f"Completed simulation iteration {iteration}/10")
 
-                # Log performance metrics
-                if trades_executed > 0:
-                    win_rate = (successful_trades / trades_executed) * 100
-                    logger.info(f"Current performance - Trades: {trades_executed}, "
-                              f"Successful: {successful_trades}, Win Rate: {win_rate:.1f}%")
-
-                    # Get detailed statistics
-                    stats = performance_tracker.get_statistics()
-                    if stats:
-                        logger.info(f"Performance statistics: {stats}")
-
+                # Wait before next iteration
                 await asyncio.sleep(5)  # Shorter wait for testing
 
             except Exception as e:
                 logger.error(f"Error in simulation loop: {str(e)}")
                 await asyncio.sleep(5)
 
-        logger.info("Trading simulation completed")
+        # Final performance report
+        logger.info("\n=== Final Simulation Report ===")
+        logger.info(f"Total Trades Executed: {trades_executed}")
+        if trades_executed > 0:
+            win_rate = (successful_trades / trades_executed) * 100
+            logger.info(f"Final Win Rate: {win_rate:.1f}%")
 
-        # Export final performance statistics
-        try:
-            if trades_executed > 0:
-                performance_tracker.export_history('simulation_results.csv')
-                logger.info("Simulation results exported to simulation_results.csv")
-            else:
-                logger.warning("No trades executed during simulation")
-        except Exception as e:
-            logger.error(f"Failed to export simulation results: {str(e)}")
+            # Get detailed statistics
+            stats = performance_tracker.get_statistics()
+            if stats:
+                logger.info("\nDetailed Performance Metrics:")
+                for key, value in stats.items():
+                    logger.info(f"{key}: {value}")
+
+            # Export results
+            performance_tracker.export_history('simulation_results.csv')
+            logger.info("\nSimulation results exported to simulation_results.csv")
+        else:
+            logger.warning("No trades executed during simulation")
+
+        logger.info("\nTrading simulation completed")
 
     except Exception as e:
         logger.error(f"Fatal error in simulation: {str(e)}")
