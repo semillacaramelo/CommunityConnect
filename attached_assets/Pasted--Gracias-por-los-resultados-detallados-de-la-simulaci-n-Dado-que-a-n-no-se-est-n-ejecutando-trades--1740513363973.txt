@@ -1,0 +1,18 @@
+"Gracias por los resultados detallados de la simulación. Dado que aún no se están ejecutando trades y las predicciones parecen estar fuera del rango esperado, me gustaría que, antes de realizar cualquier ajuste adicional en la configuración o en la estrategia, se genere una documentación completa para hacer seguimiento al estado actual del proyecto. Necesito que esta documentación cumpla con los siguientes puntos:
+
+1. **Descripción Completa del Proyecto:**  
+   - Resume el planteamiento global, incluyendo los objetivos (conexión a la API de Deriv, procesamiento de datos, entrenamiento de modelos ML, simulación de trading y ejecución de operaciones en la cuenta DEMO) y la arquitectura modular del sistema.
+
+2. **Estado Actual del Proyecto:**  
+   - Documenta qué módulos y funcionalidades se han implementado y probado hasta el momento (conexión API, obtención y procesamiento de datos, simulación de la estrategia ML y resultados de la simulación).
+   - Incluye un resumen de los resultados de la simulación, destacando las métricas clave, como la discrepancia en los cambios porcentuales (por ejemplo, predicciones de -2.47% o más, cuando lo esperado es ±0.1% a ±0.5%) y la ausencia de trades ejecutados.
+
+3. **Próximos Pasos y Requerimientos Pendientes:**  
+   - Indica claramente cuál es el siguiente paso a seguir (por ejemplo, analizar en detalle los resultados para ajustar el escalado y la normalización, calibrar el cálculo de confianza y, finalmente, validar la ejecución de trades en la cuenta DEMO con datos reales).
+   - Documenta todas las peticiones pendientes y sugerencias de mejora (por ejemplo, optimizar el DataProcessor y ModelPredictor, ajustar umbrales de validación y mejorar el manejo de errores) sin eliminar lo que ya es actual y funcional.
+   - Especifica que, en esta fase, el objetivo es que el bot ejecute transacciones en la cuenta DEMO y aprenda de datos reales del mercado, por lo que la documentación debe permitir retomar el desarrollo en un nuevo chat o en un desarrollo manual.
+
+4. **Prompt para Continuar el Desarrollo:**  
+   - Incluye un prompt o instrucciones detalladas que permitan retomar el proyecto en la siguiente sesión, asegurando que se entienda la transición desde el estado actual a la próxima fase de ajustes y mejoras.
+
+Por favor, crea y entrega la documentación completa siguiendo estos lineamientos, para que podamos tener un seguimiento detallado del proyecto y continuar con el desarrollo en la próxima etapa."
