@@ -10,6 +10,7 @@ logger = setup_logger(__name__)
 class ModelPredictor:
     def __init__(self, model_path=None):
         self.models = {}
+        self.max_expected_return = 0.005  # 0.5% max return for Forex
         if model_path:
             self.load_models(model_path)
 
@@ -36,22 +37,33 @@ class ModelPredictor:
             if not self.models:
                 raise ValueError("Models not loaded")
 
-            # Get predictions from all models
+            # Get predictions from all models (returns as percentage change)
             predictions = {}
             for name, model in self.models.items():
                 pred = model.predict(sequence, verbose=0)
-                predictions[name] = pred[0][0]
+                pred_pct = pred[0][0]  # Already in percentage form (-1 to 1 scale)
 
-            # Calculate ensemble prediction and confidence
+                # Validate prediction range
+                if abs(pred_pct) > self.max_expected_return:
+                    logger.warning(f"Model {name} prediction {pred_pct:.2%} exceeds normal range")
+                    return None
+
+                predictions[name] = pred_pct
+
+            # Calculate ensemble prediction
             pred_array = np.array(list(predictions.values()))
             ensemble_pred = np.mean(pred_array)
 
-            # Calculate prediction confidence
+            # Calculate prediction confidence based on model agreement
             pred_std = np.std(pred_array)
-            pred_range = np.max(pred_array) - np.min(pred_array)
+            max_expected_std = self.max_expected_return * 0.1  # 10% of max return
+            agreement_score = 1.0 - min(pred_std / max_expected_std, 1.0)
 
-            # Normalize confidence score (0 to 1)
-            confidence = 1.0 - min(pred_std / abs(ensemble_pred), pred_range / abs(ensemble_pred))
+            # Calculate confidence based on prediction magnitude
+            magnitude_score = 1.0 - (abs(ensemble_pred) / self.max_expected_return)
+
+            # Combined confidence score
+            confidence = 0.7 * agreement_score + 0.3 * magnitude_score
 
             # Return prediction only if confidence meets threshold
             if confidence >= confidence_threshold:
@@ -60,7 +72,7 @@ class ModelPredictor:
                     'confidence': confidence,
                     'model_predictions': predictions
                 }
-                logger.info(f"Prediction made with confidence: {confidence:.2f}")
+                logger.info(f"Prediction made - Value: {ensemble_pred:.2%}, Confidence: {confidence:.2f}")
                 return result
             else:
                 logger.warning(f"Low confidence prediction ({confidence:.2f}) rejected")
@@ -81,7 +93,8 @@ class ModelPredictor:
             metrics = {
                 'individual_predictions': {},
                 'prediction_spread': None,
-                'confidence_score': None
+                'confidence_score': None,
+                'prediction_magnitude': None
             }
 
             # Get individual model predictions
@@ -94,7 +107,15 @@ class ModelPredictor:
             # Calculate prediction spread and confidence
             pred_array = np.array(predictions)
             metrics['prediction_spread'] = np.max(pred_array) - np.min(pred_array)
-            metrics['confidence_score'] = 1.0 - (np.std(pred_array) / abs(np.mean(pred_array)))
+            metrics['prediction_magnitude'] = abs(np.mean(pred_array))
+
+            # Calculate confidence components
+            pred_std = np.std(pred_array)
+            max_expected_std = self.max_expected_return * 0.1
+            agreement_score = 1.0 - min(pred_std / max_expected_std, 1.0)
+            magnitude_score = 1.0 - (metrics['prediction_magnitude'] / self.max_expected_return)
+
+            metrics['confidence_score'] = 0.7 * agreement_score + 0.3 * magnitude_score
 
             return metrics
 

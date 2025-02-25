@@ -13,6 +13,7 @@ class DataProcessor:
         self.price_scaler = MinMaxScaler()
         self.feature_scaler = MinMaxScaler()
         self.return_scaler = MinMaxScaler(feature_range=(-1, 1))
+        self.max_expected_return = 0.005  # 0.5% max expected return for Forex
 
     def prepare_data(self, df, sequence_length=30):
         """
@@ -31,9 +32,12 @@ class DataProcessor:
 
             # Calculate percentage returns for prediction target
             df['returns'] = df['close'].pct_change()
+
+            # Clip returns to realistic range for Forex
+            df['returns'] = df['returns'].clip(-self.max_expected_return, self.max_expected_return)
             df.dropna(inplace=True)
 
-            # Log initial price statistics
+            # Log initial statistics
             logger.info(f"Price range - Min: {df['close'].min():.5f}, Max: {df['close'].max():.5f}")
             logger.info(f"Returns range - Min: {df['returns'].min():.5f}, Max: {df['returns'].max():.5f}")
 
@@ -45,61 +49,43 @@ class DataProcessor:
 
             logger.info(f"Data shape after indicators: {df.shape}")
 
-            # Separate features for different scaling approaches
-            price_cols = ['open', 'high', 'low', 'close']
-            feature_cols = [col for col in df.columns if col not in price_cols + ['returns']]
-
-            # Scale price data
-            price_data = df[price_cols].values
-            scaled_prices = self.price_scaler.fit_transform(price_data)
-            logger.info(f"Price scaling params - Min: {self.price_scaler.data_min_}, Max: {self.price_scaler.data_max_}")
-
-            # Scale technical features
-            feature_data = df[feature_cols].values
-            scaled_features = self.feature_scaler.fit_transform(feature_data)
-            logger.info(f"Feature scaling params - Min: {self.feature_scaler.data_min_}, Max: {self.feature_scaler.data_max_}")
-
-            # Scale returns (target variable)
+            # Scale returns first (target variable)
             returns_data = df['returns'].values.reshape(-1, 1)
             scaled_returns = self.return_scaler.fit_transform(returns_data)
             logger.info(f"Returns scaling params - Min: {self.return_scaler.data_min_}, Max: {self.return_scaler.data_max_}")
 
-            # Combine scaled data
-            scaled_data = np.hstack((scaled_prices, scaled_features))
-            logger.info(f"Combined scaled data shape: {scaled_data.shape}")
-
             # Create sequences for LSTM
-            X, y = self.create_sequences(scaled_data, scaled_returns, sequence_length)
+            X, y = self.create_sequences(df.drop('returns', axis=1), scaled_returns, sequence_length)
             if X is None or y is None:
                 logger.error("Failed to create sequences")
                 return None, None, None
 
             logger.info(f"Created sequences - X shape: {X.shape}, y shape: {y.shape}")
-            return X, y, {'price': self.price_scaler, 'feature': self.feature_scaler, 'return': self.return_scaler}
+            return X, y, self.return_scaler
 
         except Exception as e:
             logger.error(f"Error in prepare_data: {str(e)}")
             return None, None, None
 
     def add_technical_indicators(self, df):
-        """Add basic technical indicators to the dataset"""
+        """Add technical indicators to the dataset"""
         try:
-            # Calculate moving averages
+            # Moving averages
             df['SMA_20'] = df['close'].rolling(window=20).mean()
             df['SMA_50'] = df['close'].rolling(window=50).mean()
 
-            # Calculate RSI
+            # RSI
             delta = df['close'].diff()
             gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
             loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
             rs = gain / loss
             df['RSI'] = 100 - (100 / (1 + rs))
 
-            # Add momentum
-            df['momentum'] = df['close'] / df['close'].shift(10) - 1
+            # Momentum
+            df['momentum'] = df['close'].pct_change(periods=10)
 
-            # Add volatility
-            df['volatility'] = df['close'].rolling(window=20).std()
+            # Volatility
+            df['volatility'] = df['close'].pct_change().rolling(window=20).std()
 
             # Drop NaN values
             df.dropna(inplace=True)
@@ -128,8 +114,9 @@ class DataProcessor:
             y = []
 
             for i in range(len(data) - sequence_length):
-                X.append(data[i:(i + sequence_length)])
-                y.append(returns[i + sequence_length])  # Predict next return
+                sequence = data.iloc[i:(i + sequence_length)].values
+                X.append(sequence)
+                y.append(returns[i + sequence_length])
 
             X = np.array(X)
             y = np.array(y)
