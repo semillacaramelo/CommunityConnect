@@ -19,6 +19,7 @@ class DerivConnector:
         self.active = False
         self.lock = asyncio.Lock()
         self.request_id = 0
+        self.last_ping_time = None
 
     async def connect(self):
         """Establish WebSocket connection to Deriv API"""
@@ -66,10 +67,49 @@ class DerivConnector:
                         "ping": 1,
                         "req_id": self._get_request_id()
                     }
-                    await self.send_request(ping_req)
+                    response = await self.send_request(ping_req)
+                    if response and "pong" in response:
+                        self.last_ping_time = asyncio.get_event_loop().time()
+                        logger.debug("Ping successful")
+                    else:
+                        logger.warning("Invalid ping response")
+                        await self.reconnect()
             except Exception as e:
                 logger.warning(f"Ping failed: {str(e)}")
                 await self.reconnect()
+
+    async def check_connection(self):
+        """Check if WebSocket connection is active and responsive"""
+        try:
+            # Check basic connection state
+            if not self.websocket or self.websocket.closed or not self.active:
+                logger.warning("Connection check failed: WebSocket not active")
+                return False
+
+            # Check last successful ping time
+            if self.last_ping_time:
+                current_time = asyncio.get_event_loop().time()
+                if current_time - self.last_ping_time > 60:  # No successful ping in last minute
+                    logger.warning("Connection check failed: No recent ping response")
+                    return False
+
+            # Send test ping
+            ping_req = {
+                "ping": 1,
+                "req_id": self._get_request_id()
+            }
+            response = await self.send_request(ping_req)
+
+            if response and "pong" in response:
+                self.last_ping_time = asyncio.get_event_loop().time()
+                return True
+
+            logger.warning("Connection check failed: Invalid ping response")
+            return False
+
+        except Exception as e:
+            logger.error(f"Error checking connection: {str(e)}")
+            return False
 
     async def reconnect(self):
         """Attempt to reconnect if connection is lost"""
