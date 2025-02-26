@@ -7,6 +7,7 @@ from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Input, Concatenate
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from deriv_bot.monitor.logger import setup_logger
+import os
 
 logger = setup_logger(__name__)
 
@@ -133,3 +134,14 @@ class ModelTrainer:
         except Exception as e:
             logger.error(f"Error evaluating model: {str(e)}")
             return None
+
+    def save_models(self, directory):
+        """Save trained models"""
+        try:
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            self.model.save(os.path.join(directory, 'model.h5'))
+            return True
+        except Exception as e:
+            logger.error(f"Error saving models: {str(e)}")
+            return False
