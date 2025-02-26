@@ -101,11 +101,28 @@ class DataProcessor:
             logger.error(f"Error calculating technical indicators: {str(e)}")
             return None
 
-    def create_sequences(self, data, returns, sequence_length):
+    def create_sequences(self, data, returns, sequence_length=30):
         """Create input sequences and target returns for LSTM model"""
         try:
-            if len(data) <= sequence_length:
-                logger.error(f"Insufficient data: {len(data)} samples, need at least {sequence_length + 1}")
+            # Ensure sequence_length is a valid integer
+            if sequence_length is None or not isinstance(sequence_length, int):
+                sequence_length = 30
+                logger.warning(f"Invalid sequence length provided, defaulting to {sequence_length}")
+
+            # If data is a pandas DataFrame, convert to numpy array
+            if isinstance(data, pd.DataFrame):
+                data_array = data.values
+            else:
+                data_array = data
+
+            # Validate data_array is not empty
+            if data_array is None or len(data_array) == 0:
+                logger.error("Input data array is empty")
+                return None, None
+
+            # Validate data has sufficient length for sequence creation
+            if len(data_array) <= sequence_length:
+                logger.error(f"Insufficient data: {len(data_array)} samples, need at least {sequence_length + 1}")
                 return None, None
 
             logger.info(f"Creating sequences from data shape {data.shape} with length {sequence_length}")
@@ -113,8 +130,12 @@ class DataProcessor:
             X = []
             y = []
 
-            for i in range(len(data) - sequence_length):
-                sequence = data.iloc[i:(i + sequence_length)].values
+            for i in range(len(data_array) - sequence_length):
+                # If we're working with DataFrame, extract rows correctly
+                if isinstance(data, pd.DataFrame):
+                    sequence = data.iloc[i:(i + sequence_length)].values
+                else:
+                    sequence = data_array[i:(i + sequence_length)]
                 X.append(sequence)
                 y.append(returns[i + sequence_length])
 
@@ -137,40 +158,4 @@ class DataProcessor:
             return self.return_scaler.inverse_transform(scaled_returns.reshape(-1, 1))
         except Exception as e:
             logger.error(f"Error in inverse transform: {str(e)}")
-            return None
-from deriv_bot.monitor.logger import setup_logger
-
-logger = setup_logger(__name__)
-
-class DataProcessor:
-    def create_sequences(self, data, seq_length=30):
-        """Create sequences with validation"""
-        try:
-            if len(data) < seq_length + 1:
-                raise ValueError(f"Insufficient data: {len(data)} samples, need at least {seq_length + 1}")
-            
-            sequences = []
-            targets = []
-            
-            for i in range(len(data) - seq_length):
-                seq = data[i:(i + seq_length)]
-                target = data[i + seq_length]
-                sequences.append(seq)
-                targets.append(target)
-                
-            return sequences, targets
-        except Exception as e:
-            logger.error(f"Error creating sequences: {str(e)}")
-            return None, None
-
-    def prepare_data(self, df, sequence_length=30):
-        """Prepare data with validation checks"""
-        try:
-            if len(df) < sequence_length + 1:
-                raise ValueError(f"Insufficient data points: {len(df)}, minimum required: {sequence_length + 1}")
-                
-            # Data preparation logic here
-            return processed_data
-        except Exception as e:
-            logger.error(f"Error preparing data: {str(e)}")
             return None

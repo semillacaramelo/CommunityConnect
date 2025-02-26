@@ -7,12 +7,14 @@ import json
 import asyncio
 import websockets
 from deriv_bot.monitor.logger import setup_logger
+from deriv_bot.utils.config import Config
 
 logger = setup_logger(__name__)
 
 class DerivConnector:
-    def __init__(self):
-        self.api_token = os.getenv('DERIV_API_TOKEN_DEMO')
+    def __init__(self, config=None):
+        self.config = config or Config()
+        self.api_token = self.config.get_api_token()
         self.app_id = os.getenv('APP_ID', '1089')  # Default app_id if not provided
         self.ws_url = f"wss://ws.binaryws.com/websockets/v3?app_id={self.app_id}"
         self.websocket = None
@@ -20,6 +22,10 @@ class DerivConnector:
         self.lock = asyncio.Lock()
         self.request_id = 0
         self.last_ping_time = None
+
+        # Log the environment we're connecting to
+        env_mode = "REAL" if not self.config.is_demo() else "DEMO"
+        logger.info(f"DerivConnector initialized in {env_mode} mode")
 
     async def connect(self):
         """Establish WebSocket connection to Deriv API"""
@@ -33,6 +39,20 @@ class DerivConnector:
                 logger.error(f"Authorization failed: {error_msg}")
                 return False
 
+            self.active = True
+
+            # Log environment clearly
+            env_mode = "REAL" if not self.config.is_demo() else "DEMO"
+            logger.info(f"Successfully connected to Deriv API in {env_mode} mode")
+
+            # Start ping task
+            asyncio.create_task(self._keep_alive())
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to connect to Deriv API: {str(e)}")
+            return False
+
     async def close(self):
         """Close WebSocket connection"""
         self.active = False
@@ -43,20 +63,11 @@ class DerivConnector:
             except Exception as e:
                 logger.error(f"Error closing connection: {str(e)}")
 
-
-            self.active = True
-            logger.info("Successfully connected to Deriv API")
-
-            # Start ping task
-            asyncio.create_task(self._keep_alive())
-            return True
-
-        except Exception as e:
-            logger.error(f"Failed to connect to Deriv API: {str(e)}")
-            return False
-
     async def _authorize(self):
         """Authorize connection using API token"""
+        # Get the current token (which might have changed if environment was switched)
+        self.api_token = self.config.get_api_token()
+
         auth_req = {
             "authorize": self.api_token,
             "req_id": self._get_request_id()
@@ -145,16 +156,6 @@ class DerivConnector:
                 logger.error(f"Error sending request: {str(e)}")
                 raise
 
-    async def close(self):
-        """Close WebSocket connection"""
-        self.active = False
-        if self.websocket:
-            try:
-                await self.websocket.close()
-                logger.info("Connection closed")
-            except Exception as e:
-                logger.error(f"Error closing connection: {str(e)}")
-
     async def subscribe_to_ticks(self, symbol):
         """Subscribe to price ticks for a symbol"""
         subscribe_req = {
@@ -172,35 +173,3 @@ class DerivConnector:
             "req_id": self._get_request_id()
         }
         return await self.send_request(active_symbols_req)
-import websockets
-from deriv_bot.monitor.logger import setup_logger
-
-logger = setup_logger(__name__)
-
-class DerivConnector:
-    def __init__(self):
-        self.websocket = None
-        self.active = False
-        
-    async def check_connection(self):
-        """Check WebSocket connection status with proper error handling"""
-        try:
-            if self.websocket is None or not self.websocket.open:
-                logger.warning("WebSocket connection lost or not initialized")
-                return False
-            return True
-        except AttributeError:
-            logger.error("WebSocket object is invalid")
-            return False
-
-    async def connect(self):
-        """Connect with improved error handling"""
-        try:
-            if not await self.check_connection():
-                self.websocket = await websockets.connect('wss://ws.binaryws.com/websockets/v3')
-                logger.info("WebSocket connection established")
-                return True
-            return True
-        except Exception as e:
-            logger.error(f"Connection error: {str(e)}")
-            return False

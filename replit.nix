@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.dockstarter
     pkgs.tk
     pkgs.tcl
     pkgs.qhull
