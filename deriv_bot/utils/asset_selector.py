@@ -1,9 +1,24 @@
 """
-Asset Selector Module
+Asset Selection Module
 
-Este módulo se encarga de seleccionar el activo (asset) más adecuado para 
-operar según el horario actual. Si el activo preferido no está disponible,
-selecciona uno de la lista de fallback que esté disponible 24/7.
+Location: deriv_bot/utils/asset_selector.py
+
+Purpose:
+Manages asset selection logic including market hours,
+asset availability, and selection strategies.
+
+Dependencies:
+- pandas: Data analysis
+- deriv_bot.monitor.logger: Logging functionality
+- deriv_bot.data.data_fetcher: Market data access
+
+Interactions:
+- Input: Market conditions and time data
+- Output: Asset selection decisions
+- Relations: Used by main loop for symbol selection
+
+Author: Trading Bot Team
+Last modified: 2024-02-26
 """
 
 import logging
@@ -11,6 +26,7 @@ import datetime
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
+import pandas as pd
 
 # Configurar logger
 logger = logging.getLogger(__name__)

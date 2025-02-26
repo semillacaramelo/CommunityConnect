@@ -2,6 +2,28 @@
 Utility module for managing model files
 Handles archiving, cleanup and versioning of training files
 """
+"""
+Model Management Module
+
+Location: deriv_bot/utils/model_manager.py
+
+Purpose:
+Manages model files including saving, loading, archiving,
+and cleanup of old model versions.
+
+Dependencies:
+- os: File operations
+- datetime: Timestamp handling
+- deriv_bot.monitor.logger: Logging functionality
+
+Interactions:
+- Input: Model files and management commands
+- Output: Model file operations and maintenance
+- Relations: Used by model trainer and predictor
+
+Author: Trading Bot Team
+Last modified: 2024-02-26
+"""
 import os
 import glob
 import shutil

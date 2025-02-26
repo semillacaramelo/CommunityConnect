@@ -1,6 +1,26 @@
 """
 Module for setting up logging configuration
 """
+"""
+Logging Configuration Module
+
+Location: deriv_bot/monitor/logger.py
+
+Purpose:
+Provides centralized logging configuration and setup for the entire trading bot.
+Implements custom formatters and handlers for different logging requirements.
+
+Dependencies:
+- logging: Python's built-in logging module
+
+Interactions:
+- Input: Logging level and format configurations
+- Output: Configured logger instances
+- Relations: Used by all other modules for logging
+
+Author: Trading Bot Team
+Last modified: 2024-02-26
+"""
 import logging
 import sys
 from logging.handlers import RotatingFileHandler

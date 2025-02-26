@@ -1,6 +1,28 @@
 """
 Configuration management module
 """
+"""
+Configuration Management Module
+
+Location: deriv_bot/utils/config.py
+
+Purpose:
+Manages bot configuration including environment variables,
+trading parameters, and runtime settings.
+
+Dependencies:
+- os: Environment variable access
+- dotenv: Environment file loading
+- deriv_bot.monitor.logger: Logging functionality
+
+Interactions:
+- Input: Environment variables and config files
+- Output: Configuration parameters
+- Relations: Used by all modules for configuration
+
+Author: Trading Bot Team
+Last modified: 2024-02-26
+"""
 import os
 import logging
 import json

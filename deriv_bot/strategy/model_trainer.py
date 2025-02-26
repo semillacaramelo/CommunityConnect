@@ -1,5 +1,25 @@
 """
-Module for training the LSTM model
+Model Training Module
+
+Location: deriv_bot/strategy/model_trainer.py
+
+Purpose:
+Handles the training of machine learning models for price prediction.
+Implements model architecture, training loops, and validation.
+
+Dependencies:
+- numpy: Numerical computing library
+- scikit-learn: Machine learning library
+- tensorflow: Deep learning framework
+- deriv_bot.monitor.logger: Logging functionality
+
+Interactions:
+- Input: Processed market data for training
+- Output: Trained ML models
+- Relations: Used by main loop for model updates
+
+Author: Trading Bot Team
+Last modified: 2024-02-26
 """
 import numpy as np
 from sklearn.model_selection import train_test_split

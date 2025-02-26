@@ -1,5 +1,23 @@
 """
-Module for managing trading risks with different profiles for DEMO and REAL accounts
+Risk Management Module
+
+Location: deriv_bot/risk/risk_manager.py
+
+Purpose:
+Implements risk management strategies and trade validation rules.
+Handles position sizing, stop-loss calculations, and exposure limits.
+
+Dependencies:
+- deriv_bot.monitor.logger: Logging functionality
+- deriv_bot.utils.config: Configuration management
+
+Interactions:
+- Input: Trade parameters and account status
+- Output: Trade validation decisions
+- Relations: Used by strategy executor before trade execution
+
+Author: Trading Bot Team
+Last modified: 2024-02-26
 """
 from deriv_bot.monitor.logger import setup_logger
 
@@ -97,7 +115,7 @@ class RiskManager:
                 self.daily_loss = 0
                 logger.info(f"Demo account reset successful - Previous loss: {previous_loss}")
                 return True
-            
+
             logger.error("Failed to reset demo account balance")
             return False
 

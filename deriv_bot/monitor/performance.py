@@ -1,6 +1,27 @@
 """
 Module for tracking trading performance metrics
 """
+"""
+Performance Tracking Module
+
+Location: deriv_bot/monitor/performance.py
+
+Purpose:
+Tracks and analyzes trading performance metrics, including win rates,
+profit/loss statistics, and prediction accuracy.
+
+Dependencies:
+- pandas: Data analysis and statistics
+- deriv_bot.monitor.logger: Logging functionality
+
+Interactions:
+- Input: Trade results and performance data
+- Output: Performance metrics and statistics
+- Relations: Used by main trading loop for performance monitoring
+
+Author: Trading Bot Team
+Last modified: 2024-02-26
+"""
 import pandas as pd
 import numpy as np
 from deriv_bot.monitor.logger import setup_logger

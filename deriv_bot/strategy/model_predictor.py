@@ -1,6 +1,28 @@
 """
 Module for making predictions using the trained model
 """
+"""
+Model Prediction Module
+
+Location: deriv_bot/strategy/model_predictor.py
+
+Purpose:
+Handles price predictions using trained models.
+Implements prediction logic, confidence scoring, and ensemble methods.
+
+Dependencies:
+- numpy: Numerical computations
+- tensorflow: Model inference
+- deriv_bot.monitor.logger: Logging functionality
+
+Interactions:
+- Input: Current market data
+- Output: Price predictions and confidence scores
+- Relations: Used by strategy executor for trade decisions
+
+Author: Trading Bot Team
+Last modified: 2024-02-26
+"""
 import numpy as np
 from tensorflow.keras.models import load_model
 from deriv_bot.monitor.logger import setup_logger
