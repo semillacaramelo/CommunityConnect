@@ -22,12 +22,14 @@ Author: Trading Bot Team
 Last modified: 2024-02-26
 """
 import numpy as np
+import glob
+import pickle
+import os
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Input, Concatenate
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from deriv_bot.monitor.logger import setup_logger
-import os
 
 logger = setup_logger(__name__)
 
@@ -75,7 +77,7 @@ class ModelTrainer:
         }
         return models
 
-    def train(self, X, y, validation_split=0.2, epochs=None, batch_size=32):
+    def train(self, X, y, validation_split=0.2, epochs=None, batch_size=32, model_type=None):
         """
         Train the model with the given data
 
@@ -85,6 +87,10 @@ class ModelTrainer:
             validation_split: Fraction of data to use for validation
             epochs: Number of training epochs (uses default_epochs if None)
             batch_size: Batch size for training
+            model_type: Optional model type identifier for saving
+
+        Returns:
+            History object from model training or None if training failed
         """
         try:
             # Use instance default epochs if none provided
@@ -98,17 +104,37 @@ class ModelTrainer:
                 X, y, test_size=validation_split, shuffle=False
             )
 
-            # Callbacks for better training
+            # Create models directory if it doesn't exist
+            os.makedirs('models', exist_ok=True)
+
+            # Create model name with type if provided
+            model_file = 'best_model'
+            if model_type:
+                model_file = f'best_model_{model_type}'
+
+            # Save checkpoint path using .keras format
+            checkpoint_path = os.path.join('models', f'{model_file}.keras')
+
+            # Enhanced callbacks for better training - FIXED for native Keras format
             callbacks = [
                 EarlyStopping(
                     monitor='val_loss',
                     patience=10,
-                    restore_best_weights=True
+                    restore_best_weights=True,
+                    verbose=1
                 ),
                 ModelCheckpoint(
-                    'best_model.h5',
+                    filepath=checkpoint_path,
                     monitor='val_loss',
-                    save_best_only=True
+                    save_best_only=True,
+                    verbose=1
+                ),
+                ReduceLROnPlateau(
+                    monitor='val_loss',
+                    factor=0.5,
+                    patience=5,
+                    min_lr=0.0001,
+                    verbose=1
                 )
             ]
 
@@ -122,18 +148,49 @@ class ModelTrainer:
                 verbose=1
             )
 
-            logger.info("Model training completed")
+            logger.info(f"Model training completed for {model_type or 'default'} model")
             return history
 
         except Exception as e:
             logger.error(f"Error in model training: {str(e)}")
             return None
 
-    def save_model(self, path):
-        """Save model to the specified path"""
+    def save_model(self, path, scaler=None):
+        """
+        Save model to the specified path using native Keras format, along with metadata
+
+        Args:
+            path: Path where to save the model
+            scaler: Optional scaler to save with the model for later denormalization
+
+        Returns:
+            Boolean indicating success or failure
+        """
         try:
-            self.model.save(path, save_format='h5')
-            logger.info(f"Model saved to {path}")
+            # Ensure directory exists
+            directory = os.path.dirname(path)
+            if directory and not os.path.exists(directory):
+                os.makedirs(directory, exist_ok=True)
+
+            # Always use .keras extension for new models
+            if not path.endswith('.keras'):
+                if path.endswith('.h5'):
+                    path = path[:-3] + '.keras'
+                else:
+                    path = f"{path}.keras"
+
+            # Save model in native Keras format - FIXED to remove options parameter
+            self.model.save(path)
+            logger.info(f"Model saved to {path} in native Keras format")
+
+            # Save metadata including scaler if provided
+            if scaler is not None:
+                metadata_path = path.replace('.keras', '_metadata.pkl')
+                metadata = {'scaler': scaler}
+                with open(metadata_path, 'wb') as f:
+                    pickle.dump(metadata, f)
+                logger.info(f"Model metadata with scaler saved to {metadata_path}")
+
             return True
         except Exception as e:
             logger.error(f"Error saving model: {str(e)}")
@@ -146,6 +203,9 @@ class ModelTrainer:
         Args:
             X_test: Test input sequences
             y_test: Test target values
+
+        Returns:
+            Loss score or None if evaluation failed
         """
         try:
             score = self.model.evaluate(X_test, y_test, verbose=0)
@@ -155,18 +215,15 @@ class ModelTrainer:
             logger.error(f"Error evaluating model: {str(e)}")
             return None
 
-    def save_models(self, model_path):
-        """Save trained model"""
-        try:
-            # Ensure directory exists
-            directory = os.path.dirname(model_path)
-            if directory and not os.path.exists(directory):
-                os.makedirs(directory)
+    def save_models(self, model_path, scaler=None):
+        """
+        Save trained model (for backward compatibility)
 
-            # Save model
-            self.model.save(model_path, save_format='keras') #Updated save format
-            logger.info(f"Model saved to {model_path}")
-            return True
-        except Exception as e:
-            logger.error(f"Error saving model: {str(e)}")
-            return False
+        Args:
+            model_path: Path where to save the model
+            scaler: Optional scaler to save with the model
+
+        Returns:
+            Boolean indicating success or failure
+        """
+        return self.save_model(model_path, scaler)

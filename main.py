@@ -42,6 +42,7 @@ from deriv_bot.monitor.logger import setup_logger
 from deriv_bot.monitor.performance import PerformanceTracker
 from deriv_bot.utils.config import Config
 from deriv_bot.utils.model_manager import ModelManager
+import time
 
 logger = setup_logger(__name__)
 
@@ -340,29 +341,70 @@ async def train_model(components, historical_data, model_type='standard', save_t
         if history:
             logger.info(f"{model_type} model training completed successfully")
 
-            if save_timestamp:
-                # Save with timestamp to prevent overwriting existing models
-                model_path = components['model_manager'].save_model_with_timestamp(
-                    model_trainer.model,
-                    base_name="trained_model",
-                    model_type=model_type
-                )
-                if model_path:
-                    logger.info(f"Saved {model_type} model to {model_path}")
-                    return ModelPredictor(model_path)
+            # Make sure the models directory exists
+            os.makedirs('models', exist_ok=True)
+
+            try:
+                if save_timestamp:
+                    # Save with timestamp to prevent overwriting existing models
+                    model_path = components['model_manager'].save_model_with_timestamp(
+                        model_trainer.model,
+                        base_name="trained_model",
+                        model_type=model_type
+                    )
+                    if model_path:
+                        logger.info(f"Saved {model_type} model to {model_path}")
+
+                        # Try to save model metadata for easier loading
+                        try:
+                            # Save scaler and model parameters for future use
+                            metadata_path = model_path.replace('.h5', '_metadata.pkl')
+                            with open(metadata_path, 'wb') as f:
+                                import pickle
+                                pickle.dump({
+                                    'scaler': scaler,
+                                    'input_shape': (X.shape[1], X.shape[2]),
+                                    'creation_date': datetime.now().isoformat()
+                                }, f)
+                            logger.info(f"Saved model metadata to {metadata_path}")
+                        except Exception as e:
+                            logger.warning(f"Non-critical error saving model metadata: {str(e)}")
+
+                        return ModelPredictor(model_path, scaler=scaler)
+                    else:
+                        logger.error(f"Failed to save {model_type} model")
+                        return None
                 else:
-                    logger.error(f"Failed to save {model_type} model")
-                    return None
-            else:
-                # Save as standard name (will overwrite)
-                model_path = os.path.join('models', f'{model_type}_model.h5')
-                # Save model directly
+                    # Save as standard name (will overwrite)
+                    # First try SavedModel format (preferred in newer TensorFlow)
+                    try:
+                        model_dir = os.path.join('models', f'{model_type}_model')
+                        model_trainer.model.save(model_dir, save_format='tf')
+                        logger.info(f"{model_type} model saved to {model_dir} in SavedModel format")
+                        return ModelPredictor(model_dir, scaler=scaler)
+                    except Exception as e:
+                        logger.warning(f"Failed to save in SavedModel format, trying HDF5: {str(e)}")
+
+                        # Fall back to HDF5 (.h5) format
+                        try:
+                            model_path = os.path.join('models', f'{model_type}_model.h5')
+                            model_trainer.model.save(model_path, save_format='h5')
+                            logger.info(f"{model_type} model saved to {model_path} in HDF5 format")
+                            return ModelPredictor(model_path, scaler=scaler)
+                        except Exception as e:
+                            logger.error(f"Error saving {model_type} model in HDF5 format: {str(e)}")
+                            return None
+            except Exception as e:
+                logger.error(f"Error saving {model_type} model: {str(e)}")
+
+                # Try emergency save to a different location
                 try:
-                    model_trainer.model.save(model_path)
-                    logger.info(f"{model_type} model saved to {model_path}")
-                    return ModelPredictor(model_path)
-                except Exception as e:
-                    logger.error(f"Error saving {model_type} model to {model_path}: {str(e)}")
+                    emergency_path = os.path.join('models', f'emergency_{model_type}_{int(time.time())}.h5')
+                    model_trainer.model.save(emergency_path)
+                    logger.warning(f"Emergency save of {model_type} model to {emergency_path}")
+                    return ModelPredictor(emergency_path, scaler=scaler)
+                except Exception as e2:
+                    logger.error(f"Emergency save also failed: {str(e2)}")
                     return None
         else:
             logger.error(f"{model_type} model training failed")

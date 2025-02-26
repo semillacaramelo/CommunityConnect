@@ -31,6 +31,10 @@ args = "Run Asset Selector Test"
 task = "workflow.run"
 args = "Live Trading Bot (Demo)"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Run Strategy Tests"
+
 [[workflows.workflow]]
 name = "Trading Bot"
 author = "agent"
@@ -100,6 +104,20 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python main.py --env demo"
+
+[[workflows.workflow]]
+name = "Run Strategy Tests"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -m tests.test_strategy"
 
 [deployment]
 run = ["sh", "-c", "python main.py"]

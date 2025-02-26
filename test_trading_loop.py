@@ -3,6 +3,7 @@ Test script for simulating the trading loop without executing real trades
 """
 import asyncio
 import pandas as pd
+import os
 from datetime import datetime
 from deriv_bot.data.deriv_connector import DerivConnector
 from deriv_bot.data.data_fetcher import DataFetcher
@@ -13,6 +14,7 @@ from deriv_bot.strategy.feature_engineering import FeatureEngineer
 from deriv_bot.risk.risk_manager import RiskManager
 from deriv_bot.monitor.performance import PerformanceTracker
 from deriv_bot.monitor.logger import setup_logger
+from deriv_bot.utils.model_manager import ModelManager
 
 logger = setup_logger('trading_simulation')
 
@@ -41,6 +43,7 @@ async def run_trading_simulation():
         risk_manager = RiskManager(is_demo=True, max_position_size=200, max_daily_loss=150)
         mock_executor = MockOrderExecutor()
         performance_tracker = PerformanceTracker()
+        model_manager = ModelManager()  # Initialize model manager for proper model handling
 
         # Log risk profile
         risk_profile = risk_manager.get_risk_profile()
@@ -110,7 +113,12 @@ async def run_trading_simulation():
         # Train ensemble model
         logger.info("Training ensemble models")
         model_trainer = ModelTrainer(input_shape=(X.shape[1], X.shape[2]))
-        history = model_trainer.train(X, y, epochs=10)  # Quick training for testing
+
+        # Set model type for this test
+        model_type = "short_term"
+        logger.info(f"Training {model_type} model for simulation")
+
+        history = model_trainer.train(X, y, epochs=10, model_type=model_type)  # Quick training for testing
 
         if not history:
             logger.error("Model training failed")
@@ -118,11 +126,41 @@ async def run_trading_simulation():
 
         logger.info("Model training completed")
 
-        # Save models
-        model_trainer.save_models('models')
+        # Create models directory if it doesn't exist
+        models_dir = 'models'
+        os.makedirs(models_dir, exist_ok=True)
 
-        # Initialize predictor with trained models
-        predictor = ModelPredictor('models')
+        # Save model with native Keras format and model type
+        model_path = os.path.join(models_dir, f'{model_type}_model.keras')
+        saved = model_trainer.save_model(model_path, scaler=scaler)
+
+        if not saved:
+            logger.error(f"Failed to save model to {model_path}")
+            return
+
+        logger.info(f"Model successfully saved to {model_path}")
+
+        # Save a timestamped model version using model manager
+        timestamp_path = model_manager.save_model_with_timestamp(
+            model_trainer.model, 
+            base_name="trained_model", 
+            model_type=model_type,
+            scaler=scaler
+        )
+
+        if timestamp_path:
+            logger.info(f"Timestamped model saved to {timestamp_path}")
+        else:
+            logger.warning("Failed to save timestamped model")
+
+        # Initialize predictor with trained model
+        predictor = ModelPredictor(model_path)
+
+        if not predictor.models:
+            logger.error("Failed to load models for prediction")
+            return
+
+        logger.info(f"Successfully loaded {len(predictor.models)} model(s) for prediction")
 
         # Run simulation loop with DEMO confidence threshold
         logger.info("Starting trading simulation loop")
@@ -287,6 +325,10 @@ async def run_trading_simulation():
             logger.info("\nSimulation results exported to simulation_results.csv")
         else:
             logger.warning("No trades executed during simulation")
+
+        # Archive old models
+        archived_count = model_manager.archive_old_models(model_type=model_type)
+        logger.info(f"Archived {archived_count} old models")
 
         logger.info("\nTrading simulation completed")
 
