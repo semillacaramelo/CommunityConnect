@@ -31,12 +31,12 @@ class TestAssetSelector(unittest.TestCase):
         
     def test_is_market_open_stocks(self):
         """Prueba para verificar si el mercado de acciones está abierto."""
-        # Lunes a las 14:00 UTC (9:00 AM en NY, mercado abierto)
+        # Lunes a las 14:30 UTC (9:30 AM en NY, mercado abierto)
         monday_ny_market_open = datetime(2025, 2, 24, 14, 30, 0, tzinfo=ZoneInfo("UTC"))
         self.assertTrue(self.selector.is_market_open("OTC_SPX", monday_ny_market_open))
         
-        # Lunes a las 22:00 UTC (17:00 en NY, mercado cerrado)
-        monday_ny_market_closed = datetime(2025, 2, 24, 22, 0, 0, tzinfo=ZoneInfo("UTC"))
+        # Lunes a las 21:00 UTC (16:00 en NY, mercado cerrado)
+        monday_ny_market_closed = datetime(2025, 2, 24, 21, 0, 0, tzinfo=ZoneInfo("UTC"))
         self.assertFalse(self.selector.is_market_open("OTC_SPX", monday_ny_market_closed))
         
     def test_is_market_open_crypto(self):

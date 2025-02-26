@@ -99,6 +99,7 @@ class AssetSelector:
     def is_market_open(self, symbol: str, current_datetime: Optional[datetime] = None) -> bool:
         """
         Verifica si el mercado para un símbolo específico está abierto según su horario programado.
+        Implementa lógica mejorada para mercados de acciones y considera zonas horarias.
 
         Args:
             symbol: Símbolo del activo a verificar

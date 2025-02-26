@@ -276,10 +276,26 @@ class DerivConnector:
         try:
             await self.close()
 
-            # Backoff exponencial con jitter optimizado
-            delay = min(self.reconnect_delay * (2 ** self.reconnect_attempts), self.max_reconnect_delay)
-            jitter = random.uniform(0.5, 1.5)  # Increased jitter range
-            wait_time = delay * jitter
+            # Enhanced exponential backoff with optimized jitter
+            base_delay = self.reconnect_delay
+            max_delay = self.max_reconnect_delay
+            attempt = self.reconnect_attempts
+            
+            # Calculate delay with full jitter backoff
+            delay = min(base_delay * (2 ** attempt), max_delay)
+            actual_delay = random.uniform(base_delay, delay)
+            
+            logger.info(f"Attempting reconnection {attempt + 1}/{self.max_reconnect_attempts} "
+                       f"with {actual_delay:.2f}s delay")
+            
+            await asyncio.sleep(actual_delay)
+
+            # Clear existing state
+            self.websocket = None
+            self.authorized = False
+            self.consecutive_failures = 0
+            self.last_message_time = None
+            self.last_ping_time = None
             
             # Reset connection state
             self.websocket = None

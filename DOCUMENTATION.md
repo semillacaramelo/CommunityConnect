@@ -2,12 +2,22 @@
 
 ## 1. Configuración para Entornos Live
 
-### 1.1 Requisitos Previos
-- Python 3.11 o superior
-- Cuenta en Deriv.com con tokens API (demo y real)
-- Dependencias instaladas mediante `pip install -r requirements.txt`
+### 1.1 Requisitos del Sistema y Consideraciones de Conectividad
 
-### 1.2 Configuración de Tokens API
+- Python 3.11 o superior
+- Conexión a Internet estable (mínimo 1 Mbps)
+- Cuenta en Deriv.com con tokens API activos
+- Variables de entorno configuradas correctamente
+
+### 1.2 Manejo de Errores y Reconexión
+
+El sistema implementa las siguientes estrategias de resiliencia:
+- Reconexión automática con backoff exponencial
+- Caché de datos para minimizar llamadas API
+- Validación robusta de datos históricos
+- Manejo de zonas horarias para mercados globales
+
+### 1.3 Configuración de Tokens API
 Para utilizar el bot en entornos live es necesario configurar los tokens API:
 
 1. Obtener tokens desde [Deriv API Token Page](https://app.deriv.com/account/api-token)

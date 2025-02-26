@@ -59,9 +59,9 @@ class DataFetcher:
             logger.error(f"Error en is_symbol_available para {symbol}: {str(e)}")
             return False
 
-    async def fetch_historical_data(self, symbol, interval, count=1000, retry_attempts=3, use_cache=True):
+    async def fetch_historical_data(self, symbol, interval, count=1000, retry_attempts=5, use_cache=True):
         """
-        Fetch historical candlestick data
+        Fetch historical candlestick data with enhanced error handling and retry logic
 
         Args:
             symbol: Trading symbol (e.g., "frxEURUSD")
