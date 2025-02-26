@@ -137,10 +137,25 @@ python clean_models.py --action both
 - Comprobar que los umbrales de predicción no sean demasiado restrictivos
 - Revisar los logs en 'logs/trading_bot.log' para ver predicciones y motivos de no-operación
 
-### 4.3 Errores en Modo Real
+### 4.3 Configuración de Cuentas DEMO y REAL
+
+#### Cuenta DEMO
+- El bot soporta recarga automática de saldo virtual
+- Configure `DEMO_INITIAL_BALANCE` para el saldo inicial deseado
+- Configure `DEMO_MIN_BALANCE` para el umbral mínimo de recarga
+- Configure `DEMO_MAX_DAILY_LOSS` para el límite de pérdidas diarias
+
+#### Cuenta REAL
 - Verificar que `DERIV_REAL_MODE_CONFIRMED=yes` en el archivo `.env`
 - Confirmar que el token real tenga los permisos correctos
 - Verificar suficientes fondos en la cuenta Deriv
+
+### 4.4 Recarga Automática de Saldo (DEMO)
+El bot incluye funcionalidad de recarga automática para cuentas demo que:
+- Detecta cuando el saldo cae por debajo de `DEMO_MIN_BALANCE`
+- Reinicia el saldo a `DEMO_INITIAL_BALANCE` automáticamente
+- Reinicia cuando se alcanza `DEMO_MAX_DAILY_LOSS`
+- Mantiene registro de recargas en los logs
 
 ### 4.4  Variables de entorno
 - DERIV_API_TOKEN_DEMO

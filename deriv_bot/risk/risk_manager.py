@@ -83,16 +83,39 @@ class RiskManager:
             logger.warning(f"Demo daily loss ({self.daily_loss}) exceeded limit ({self.max_daily_loss})")
             self.reset_demo_balance()
 
-    def reset_demo_balance(self):
+    async def reset_demo_balance(self, connector):
         """Reset demo account balance and loss tracking"""
-        if self.is_demo:
-            previous_loss = self.daily_loss
-            self.daily_loss = 0
-            logger.info(f"Demo account reset - Previous loss: {previous_loss}, Balance reset to 0")
-            return True
-        else:
+        if not self.is_demo:
             logger.warning("Balance reset attempted on real account - operation denied")
             return False
+
+        try:
+            # Resetear balance virtual a través del conector
+            reset_success = await connector.reset_virtual_balance()
+            if reset_success:
+                previous_loss = self.daily_loss
+                self.daily_loss = 0
+                logger.info(f"Demo account reset successful - Previous loss: {previous_loss}")
+                return True
+            
+            logger.error("Failed to reset demo account balance")
+            return False
+
+        except Exception as e:
+            logger.error(f"Error in demo balance reset: {str(e)}")
+            return False
+
+    def check_balance_limits(self, current_balance, connector):
+        """Check if balance reset is needed"""
+        if not self.is_demo:
+            return False
+
+        if current_balance < 100 or self.daily_loss >= self.max_daily_loss:
+            logger.warning(f"Demo account limits reached - Balance: {current_balance}, "
+                         f"Daily loss: {self.daily_loss}")
+            return True
+
+        return False
 
     def get_risk_profile(self):
         """Return current risk profile settings"""

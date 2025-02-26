@@ -96,7 +96,7 @@ class DerivConnector:
                 self.authorized = False  # Resetear estado de autorización
 
     async def _authorize(self):
-        """Enhanced API authorization with retry logic"""
+        """Enhanced API authorization with balance check and account type detection"""
         self.api_token = self.config.get_api_token()
         max_retries = 3
 
@@ -110,7 +110,22 @@ class DerivConnector:
                 response = await self.send_request(auth_req)
                 if response and "authorize" in response:
                     self.authorized = True
-                    logger.info("API authorization successful")
+                    account_info = response["authorize"]
+                    
+                    # Detectar tipo de cuenta y saldo
+                    self.is_virtual = account_info.get("is_virtual", False)
+                    self.balance = float(account_info.get("balance", 0))
+                    self.currency = account_info.get("currency", "USD")
+                    
+                    env_type = "DEMO" if self.is_virtual else "REAL"
+                    logger.info(f"API authorization successful - {env_type} account")
+                    logger.info(f"Account balance: {self.balance} {self.currency}")
+                    
+                    # Verificar saldo mínimo para cuenta virtual
+                    if self.is_virtual and self.balance < 1000:
+                        logger.warning("Demo account balance low, initiating reset")
+                        await self.reset_virtual_balance()
+                    
                     return response
 
                 await asyncio.sleep(2)
@@ -120,6 +135,32 @@ class DerivConnector:
                     await asyncio.sleep(2)
 
         return None
+
+    async def reset_virtual_balance(self):
+        """Reset virtual account balance"""
+        if not self.is_virtual:
+            logger.warning("Balance reset attempted on real account - denied")
+            return False
+
+        try:
+            reset_req = {
+                "reset_balance": 1,
+                "req_id": self._get_request_id()
+            }
+            
+            response = await self.send_request(reset_req)
+            if response and "reset_balance" in response:
+                new_balance = float(response["reset_balance"].get("balance", 0))
+                logger.info(f"Demo account balance reset to {new_balance} {self.currency}")
+                self.balance = new_balance
+                return True
+            
+            logger.error("Failed to reset demo account balance")
+            return False
+
+        except Exception as e:
+            logger.error(f"Error resetting demo balance: {str(e)}")
+            return False
 
         auth_req = {
             "authorize": self.api_token,
