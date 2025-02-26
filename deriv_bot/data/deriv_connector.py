@@ -204,20 +204,35 @@ class DerivConnector:
         try:
             # Check basic connection state
             if not self.websocket or self.websocket.closed or not self.active:
-                logger.warning("Connection check failed: WebSocket not active")
                 return False
 
-            # Si no estamos autorizados, la conexión no sirve
+            # Verify authorization
             if not self.authorized:
-                logger.warning("Connection check failed: Not authorized")
                 return False
 
             # Check last successful ping time
             if self.last_ping_time:
                 current_time = asyncio.get_event_loop().time()
-                if current_time - self.last_ping_time > 90:  # Aumentado de 60 a 90 segundos
-                    logger.warning("Connection check failed: No recent ping response")
+                if current_time - self.last_ping_time > 90:
                     return False
+                return True  # Si tenemos ping reciente, la conexión está activa
+            
+            # Si no hay último ping, hacer uno nuevo
+            ping_req = {
+                "ping": 1,
+                "req_id": self._get_request_id()
+            }
+            
+            response = await asyncio.wait_for(
+                self.send_request(ping_req),
+                timeout=5
+            )
+            
+            if response and "pong" in response:
+                self.last_ping_time = asyncio.get_event_loop().time()
+                return True
+                
+            return False
 
             # Send test ping
             ping_req = {

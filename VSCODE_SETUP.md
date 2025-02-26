@@ -32,11 +32,39 @@ cd deriv-ml-trading-bot
 
 ### 2. Configurar el Entorno
 
-La forma más rápida de configurar todo el entorno es ejecutar:
+#### 2.1 Configuración Automática
+Ejecuta el script de configuración:
 
 ```bash
 python environment_setup.py --vscode
 ```
+
+#### 2.2 Configuración Manual del Entorno de Desarrollo
+
+1. **Configurar Variables de Entorno**:
+   Crea un archivo `.env` en la raíz del proyecto:
+   ```
+   DERIV_API_TOKEN_DEMO=TuTokenDemo
+   DERIV_API_TOKEN_REAL=TuTokenReal
+   DERIV_BOT_ENV=demo
+   APP_ID=1089
+   ```
+
+2. **Configurar el Intérprete de Python**:
+   - Presiona `Ctrl+Shift+P` (o `Cmd+Shift+P` en macOS)
+   - Escribe "Python: Select Interpreter"
+   - Selecciona el intérprete de Python 3.11
+
+3. **Verificar las Extensiones**:
+   Asegúrate de tener instaladas:
+   - Python
+   - Pylance
+   - Python Debugger
+
+4. **Verificar la Configuración**:
+   - Ejecuta `python test_api_connectivity.py --mode demo`
+   - Confirma que la conexión es exitosa
+   - Repite con `--mode real` si planeas usar modo real
 
 Este comando:
 - Crea/actualiza el archivo `.env` con tus configuraciones
