@@ -33,6 +33,32 @@ class DataFetcher:
             logger.error(f"Error verificando disponibilidad del símbolo: {str(e)}")
             return False
 
+    def is_symbol_available(self, symbol):
+        """
+        Método sincrónico para verificar si un símbolo está disponible para trading.
+        Este método es utilizado por AssetSelector.
+
+        Args:
+            symbol: Símbolo a verificar
+
+        Returns:
+            bool: True si el símbolo está disponible, False en caso contrario
+        """
+        # Creamos un evento de loop para llamar al método asincrónico
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Si el loop ya está corriendo, creamos una tarea
+                future = asyncio.run_coroutine_threadsafe(
+                    self.check_trading_enabled(symbol), loop)
+                return future.result(timeout=10)  # Timeout de 10 segundos
+            else:
+                # Si no hay loop corriendo, ejecutamos directamente
+                return loop.run_until_complete(self.check_trading_enabled(symbol))
+        except Exception as e:
+            logger.error(f"Error en is_symbol_available para {symbol}: {str(e)}")
+            return False
+
     async def fetch_historical_data(self, symbol, interval, count=1000, retry_attempts=3, use_cache=True):
         """
         Fetch historical candlestick data

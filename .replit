@@ -23,6 +23,10 @@ args = "API Test"
 task = "workflow.run"
 args = "Trading Simulation"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Run Asset Selector Test"
+
 [[workflows.workflow]]
 name = "Trading Bot"
 author = "agent"
@@ -64,6 +68,20 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python test_trading_loop.py"
+
+[[workflows.workflow]]
+name = "Run Asset Selector Test"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python -m tests.test_asset_selector"
 
 [deployment]
 run = ["sh", "-c", "python main.py"]
