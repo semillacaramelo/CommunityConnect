@@ -1,134 +1,139 @@
 # Documentación del Bot de Trading ML para Deriv.com
 
-## 1. Descripción Completa del Proyecto
+## 1. Configuración para Entornos Live
 
-### 1.1 Planteamiento Global
-El proyecto implementa un bot de trading algorítmico que utiliza machine learning para operar en la plataforma Deriv.com. La arquitectura modular del sistema permite una clara separación de responsabilidades y facilita el mantenimiento y extensión del código.
+### 1.1 Requisitos Previos
+- Python 3.11 o superior
+- Cuenta en Deriv.com con tokens API (demo y real)
+- Dependencias instaladas mediante `pip install -r requirements.txt`
 
-### 1.2 Objetivos Principales
-- Conexión robusta a la API de Deriv
-- Procesamiento y análisis de datos de mercado
-- Entrenamiento de modelos ML para predicción
-- Simulación de trading y validación de estrategias
-- Ejecución de operaciones en cuenta DEMO
+### 1.2 Configuración de Tokens API
+Para utilizar el bot en entornos live es necesario configurar los tokens API:
 
-### 1.3 Arquitectura Modular
-```
-deriv_bot/
-├── data/               # Manejo de datos y conexión API
-├── execution/          # Ejecución de órdenes
-├── monitor/           # Logging y seguimiento
-├── risk/              # Gestión de riesgo
-├── strategy/          # Modelos ML y estrategias
-└── utils/             # Utilidades generales
-```
+1. Obtener tokens desde [Deriv API Token Page](https://app.deriv.com/account/api-token)
+   - Para cuenta DEMO: Token con permisos "Read", "Trade", "Payments"
+   - Para cuenta REAL: Token con permisos "Read", "Trade", "Payments"
 
-## 2. Estado Actual del Proyecto
+2. Configurar el archivo `.env`:
+   ```
+   # Trading Environment (demo/real)
+   DERIV_BOT_ENV=demo  # Cambiar a 'real' para operar con dinero real
 
-### 2.1 Módulos Implementados y Probados
-1. **Conexión API (✓ Completado)**
-   - Conexión WebSocket estable
-   - Autenticación y manejo de sesiones
-   - Reconexión automática
+   # Tokens API
+   DERIV_API_TOKEN_DEMO=TU_TOKEN_DEMO_AQUÍ
+   DERIV_API_TOKEN_REAL=TU_TOKEN_REAL_AQUÍ
 
-2. **Procesamiento de Datos (✓ Completado)**
-   - Obtención de datos históricos
-   - Cálculo de indicadores técnicos
-   - Normalización y preparación para ML
+   # Confirmación para modo real (medida de seguridad)
+   DERIV_REAL_MODE_CONFIRMED=no  # Cambiar a 'yes' para permitir trading real
 
-3. **Modelos ML (⚠️ En Ajuste)**
-   - Arquitectura LSTM implementada
-   - Ensemble de modelos
-   - Predicción de retornos porcentuales
-   - Ajuste pendiente en escalado/des-escalado
+   # ID de Aplicación
+   APP_ID=1089
 
-4. **Simulación de Trading (✓ Completado)**
-   - MockOrderExecutor implementado
-   - Tracking de operaciones
-   - Métricas de rendimiento
-   - Exportación de resultados
+   # Parámetros de entrenamiento
+   SEQUENCE_LENGTH=30
+   TRAINING_EPOCHS=50
+   MODEL_SAVE_PATH=models
+   ```
 
-5. **Gestión de Riesgo (✓ Completado)**
-   - Validación de operaciones
-   - Límites de pérdida
-   - Perfiles DEMO/REAL
+3. Verificar la conexión a la API:
+   ```bash
+   python test_api_connectivity.py
+   ```
 
-### 2.2 Resultados de Simulación
-1. **Problemas Detectados**
-   - Predicciones fuera de rango (>70% cuando deberían ser ±0.5%)
-   - Alta confianza en predicciones incorrectas
-   - Error en escalado/des-escalado de datos
+## 2. Ejecución del Bot en Entornos Live
 
-2. **Métricas Actuales**
-   - Win rate: ~50%
-   - Predicciones: Fuera de rango realista
-   - Tiempo de respuesta: ~250ms por predicción
+### 2.1 Modo Demo (Práctica sin Riesgo)
+Este modo permite operar sin utilizar fondos reales:
 
-## 3. Próximos Pasos y Requerimientos
-
-### 3.1 Correcciones Técnicas Prioritarias
-1. **Ajuste de Procesamiento de Datos**
-   - [x] Cambio a retornos porcentuales
-   - [x] Corrección de escalado
-   - [x] Calibración de umbrales
-   - [ ] Validación con datos reales
-
-2. **Mejoras en Predicción**
-   - [x] Límite de retornos a ±0.5%
-   - [x] Nuevo cálculo de confianza
-   - [ ] Validación de predicciones
-   - [ ] Ajuste de hiperparámetros
-
-3. **Transición a Ejecución Real**
-   - [ ] Implementar OrderExecutor real
-   - [ ] Validar ejecución en DEMO
-   - [ ] Monitoreo de operaciones
-   - [ ] Logging detallado
-
-### 3.2 Mejoras Futuras
-1. **Sistema de Notificaciones**
-   - Integración futura con Twilio
-   - Alertas de eventos críticos
-   - Notificaciones de performance
-
-2. **Panel de Control**
-   - Interfaz web de monitoreo
-   - Visualización en tiempo real
-   - Control de parámetros
-
-3. **Análisis Avanzado**
-   - Backtesting multi-divisa
-   - Análisis de correlaciones
-   - Optimización de parámetros
-
-## 4. Prompt para Continuar el Desarrollo
-
-Para continuar el desarrollo, utilizar el siguiente prompt:
-
-```
-Como ingeniero de ML especializado en trading algorítmico, necesito tu ayuda para continuar el desarrollo del bot de trading para Deriv.com. El proyecto tiene una base funcional con:
-
-1. Conexión API implementada
-2. Procesamiento de datos y ML configurado
-3. Simulación de trading funcionando
-4. Gestión de riesgo activa
-
-Necesitamos:
-1. Validar las correcciones de escalado y predicción
-2. Implementar la ejecución real en cuenta DEMO
-3. Ajustar parámetros basados en resultados
-
-Los archivos principales están en la estructura modular y las credenciales API están configuradas. ¿Podemos proceder con la validación de las correcciones de escalado y predicción?
+```bash
+python main.py --env demo
 ```
 
-### Variables de Entorno
+Opciones adicionales:
+```bash
+python main.py --env demo --symbol frxEURUSD --stake-amount 20 --train-interval 6
+```
+
+### 2.2 Modo Real (Trading con Fondos Reales)
+**IMPORTANTE**: Este modo utiliza fondos reales. Asegúrese de entender los riesgos asociados.
+
+1. Primer paso (Medida de seguridad): Editar el archivo `.env` y establecer:
+   ```
+   DERIV_REAL_MODE_CONFIRMED=yes
+   ```
+
+2. Ejecutar el bot en modo real:
+   ```bash
+   python main.py --env real
+   ```
+
+Opciones adicionales:
+```bash
+python main.py --env real --symbol frxEURUSD --stake-amount 10 --stop-loss 0.05
+```
+
+## 3. Mantenimiento del Sistema
+
+### 3.1 Reentrenamiento de Modelos
+
+El sistema puede reentrenar los modelos automáticamente o manualmente:
+
+1. **Reentrenamiento Automático**:
+   Durante la ejecución normal, el bot reentrena los modelos según el intervalo configurado:
+   ```bash
+   python main.py --train-interval 4  # Reentrenar cada 4 horas
+   ```
+
+2. **Reentrenamiento Manual**:
+   ```bash
+   python main.py --train-only
+   ```
+
+### 3.2 Gestión de Modelos
+
+Para administrar los archivos de modelos entrenados:
+
+```bash
+# Ver estadísticas de almacenamiento
+python clean_models.py --action stats
+
+# Archivar modelos antiguos (mantener los 5 más recientes)
+python clean_models.py --action archive --keep 5
+
+# Eliminar archivos archivados de más de 30 días
+python clean_models.py --action clean --days 30
+
+# Realizar ambas operaciones
+python clean_models.py --action both
+```
+
+### 3.3 Variables de Entorno Requeridas
+
+- `DERIV_API_TOKEN_DEMO`: Token API para cuenta de demostración
+- `DERIV_API_TOKEN_REAL`: Token API para cuenta real
+- `DERIV_BOT_ENV`: Entorno de trading (demo/real)
+- `DERIV_REAL_MODE_CONFIRMED`: Confirmación para modo real (establecer a "yes")
+- `APP_ID`: ID de aplicación Deriv
+
+## 4. Solución de Problemas en Entornos Live
+
+### 4.1 Errores de Conexión API
+- Verificar que los tokens API sean correctos y no hayan expirado
+- Ejecutar `python test_api_connectivity.py` para diagnosticar problemas
+- Comprobar la conexión a internet
+
+### 4.2 El Bot No Realiza Operaciones
+- Verificar que la configuración de `stake_amount` sea adecuada
+- Comprobar que los umbrales de predicción no sean demasiado restrictivos
+- Revisar los logs en 'logs/trading_bot.log' para ver predicciones y motivos de no-operación
+
+### 4.3 Errores en Modo Real
+- Verificar que `DERIV_REAL_MODE_CONFIRMED=yes` en el archivo `.env`
+- Confirmar que el token real tenga los permisos correctos
+- Verificar suficientes fondos en la cuenta Deriv
+
+### 4.4  Variables de entorno
 - DERIV_API_TOKEN_DEMO
 - DERIV_API_TOKEN_REAL
 - DERIV_BOT_ENV
 - APP_ID
-
-### Tests y Validación
-- Tests unitarios: ✓
-- Tests de integración API: ✓
-- Simulaciones de trading: ⚠️ (En ajuste)
-- Validación DEMO: Pendiente

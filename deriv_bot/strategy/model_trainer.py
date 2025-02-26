@@ -11,9 +11,18 @@ from deriv_bot.monitor.logger import setup_logger
 logger = setup_logger(__name__)
 
 class ModelTrainer:
-    def __init__(self, input_shape):
+    def __init__(self, input_shape, epochs=50):
+        """
+        Initialize model trainer with input shape and optional training parameters
+
+        Args:
+            input_shape: Shape of input data (sequence_length, features)
+            epochs: Number of training epochs (default: 50)
+        """
         self.input_shape = input_shape
-        self.models = self._build_ensemble_models()
+        self.default_epochs = epochs if epochs is not None else 50  # Ensure default_epochs is never None
+        self.model = self._build_lstm_model(units=128)  # Default to medium model
+        logger.info(f"Model trainer initialized with input shape {input_shape} and default epochs {self.default_epochs}")
 
     def _build_lstm_model(self, units, dropout_rate=0.2):
         """
@@ -45,18 +54,24 @@ class ModelTrainer:
         }
         return models
 
-    def train(self, X, y, validation_split=0.2, epochs=50, batch_size=32):
+    def train(self, X, y, validation_split=0.2, epochs=None, batch_size=32):
         """
-        Train the ensemble of LSTM models
+        Train the model with the given data
 
         Args:
             X: Input sequences
             y: Target values
             validation_split: Fraction of data to use for validation
-            epochs: Number of training epochs
+            epochs: Number of training epochs (uses default_epochs if None)
             batch_size: Batch size for training
         """
         try:
+            # Use instance default epochs if none provided
+            if epochs is None:
+                epochs = self.default_epochs
+
+            logger.info(f"Training model for {epochs} epochs with batch size {batch_size}")
+
             # Split data into train and validation sets
             X_train, X_val, y_train, y_val = train_test_split(
                 X, y, test_size=validation_split, shuffle=False
@@ -76,56 +91,45 @@ class ModelTrainer:
                 )
             ]
 
-            # Train each model in the ensemble
-            history = {}
-            for name, model in self.models.items():
-                logger.info(f"Training {name} model...")
+            # Train the model
+            history = self.model.fit(
+                X_train, y_train,
+                validation_data=(X_val, y_val),
+                epochs=epochs,
+                batch_size=batch_size,
+                callbacks=callbacks,
+                verbose=1
+            )
 
-                history[name] = model.fit(
-                    X_train, y_train,
-                    validation_data=(X_val, y_val),
-                    epochs=epochs,
-                    batch_size=batch_size,
-                    callbacks=callbacks,
-                    verbose=1
-                )
-
-                logger.info(f"{name} model training completed")
-
-            logger.info("Ensemble training completed")
+            logger.info("Model training completed")
             return history
 
         except Exception as e:
             logger.error(f"Error in model training: {str(e)}")
             return None
 
-    def save_models(self, directory='models'):
-        """Save all models in the ensemble"""
+    def save_model(self, path):
+        """Save model to the specified path"""
         try:
-            for name, model in self.models.items():
-                path = f"{directory}/{name}_model.keras"
-                model.save(path, save_format='keras')
-                logger.info(f"Model {name} saved to {path}")
+            self.model.save(path, save_format='h5')
+            logger.info(f"Model saved to {path}")
             return True
         except Exception as e:
-            logger.error(f"Error saving models: {str(e)}")
+            logger.error(f"Error saving model: {str(e)}")
             return False
 
-    def evaluate_models(self, X_test, y_test):
+    def evaluate(self, X_test, y_test):
         """
-        Evaluate each model in the ensemble
+        Evaluate model on test data
 
         Args:
             X_test: Test input sequences
             y_test: Test target values
         """
         try:
-            results = {}
-            for name, model in self.models.items():
-                score = model.evaluate(X_test, y_test, verbose=0)
-                results[name] = score
-                logger.info(f"{name} model test loss: {score:.4f}")
-            return results
+            score = self.model.evaluate(X_test, y_test, verbose=0)
+            logger.info(f"Model test loss: {score:.4f}")
+            return score
         except Exception as e:
-            logger.error(f"Error evaluating models: {str(e)}")
+            logger.error(f"Error evaluating model: {str(e)}")
             return None
