@@ -117,43 +117,23 @@ class Config:
 
         return token
 
-    def set_environment(self, environment):
-        """
-        Switch between demo and real trading environments
-        Args:
-            environment: 'demo' or 'real'
-        Returns:
-            bool: True if switch was successful
-        """
-        environment = environment.lower()
-        if environment not in ['demo', 'real']:
-            logger.error(f"Invalid environment: {environment}. Must be 'demo' or 'real'")
+    def set_environment(self, env_mode):
+        """Enhanced environment configuration with validation"""
+        env_mode = env_mode.lower()
+        if env_mode not in ['demo', 'real']:
+            logger.error(f"Invalid environment mode: {env_mode}")
             return False
 
-        # Before switching to real, verify token exists
-        if environment == 'real':
-            real_token = os.getenv('DERIV_API_TOKEN_REAL')
-            if not real_token:
-                logger.error("Cannot switch to REAL mode: Missing DERIV_API_TOKEN_REAL")
+        if env_mode == 'real':
+            if not os.getenv('DERIV_API_TOKEN_REAL'):
+                logger.error("Real mode requires DERIV_API_TOKEN_REAL")
+                return False
+            if os.getenv('DERIV_REAL_MODE_CONFIRMED', '').lower() != 'yes':
+                logger.error("Real mode not confirmed. Set DERIV_REAL_MODE_CONFIRMED=yes")
                 return False
 
-            logger.warning("SWITCHING TO REAL TRADING MODE - ACTUAL FUNDS WILL BE USED!")
-
-            # Add additional safety check for real mode
-            if not os.getenv('DERIV_REAL_MODE_CONFIRMED', '').lower() == 'yes':
-                logger.error("Real mode requires confirmation. Set DERIV_REAL_MODE_CONFIRMED=yes in .env file.")
-                logger.error("This is a safety measure to prevent accidental use of real funds.")
-                return False
-
-        # Update environment
-        old_env = self.environment
-        self.environment = environment
-        os.environ['DERIV_BOT_ENV'] = environment
-        logger.info(f"Trading environment switched from {old_env.upper()} to {environment.upper()}")
-
-        # Guardar en archivo de estado para persistencia
-        self._save_state()
-
+        self.environment = env_mode
+        logger.info(f"Environment set to {env_mode.upper()}")
         return True
 
     def get_environment(self):

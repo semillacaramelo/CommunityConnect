@@ -60,6 +60,19 @@ class DataFetcher:
             return False
 
     async def fetch_historical_data(self, symbol, interval, count=1000, retry_attempts=5, use_cache=True):
+        """Fetch historical data with improved error handling"""
+        await self._ensure_valid_connection()
+        
+        if not await self.check_trading_enabled(symbol):
+            logger.error(f"Trading not available for {symbol}")
+            return None
+            
+        # Implementar verificación de conexión antes de cada intento
+        async def _ensure_valid_connection(self):
+            if not self.connector or not await self.connector.check_connection():
+                logger.info("Reconnecting due to invalid connection...")
+                await self.connector.reconnect()
+                await asyncio.sleep(1)
         """
         Fetch historical candlestick data with enhanced error handling and retry logic
 

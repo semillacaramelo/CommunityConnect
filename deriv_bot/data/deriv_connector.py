@@ -43,14 +43,19 @@ class DerivConnector:
             logger.debug(f"Connecting to {self.ws_url}")
             self.websocket = await websockets.connect(
                 self.ws_url,
-                ping_interval=20,
-                ping_timeout=60,
-                close_timeout=30,
+                ping_interval=10,
+                ping_timeout=30,
+                close_timeout=15,
                 max_size=10 * 1024 * 1024,
                 extra_headers={
                     'User-Agent': 'deriv-bot/1.0.0'
-                }
+                },
+                max_queue=1024
             )
+            
+            # Set shorter timeouts for faster failure detection
+            self.ping_interval = 15
+            self.consecutive_failures = 0
 
             # Authorize connection
             auth_response = await self._authorize()
@@ -91,8 +96,30 @@ class DerivConnector:
                 self.authorized = False  # Resetear estado de autorización
 
     async def _authorize(self):
-        """Authorize connection using API token"""
+        """Enhanced API authorization with retry logic"""
         self.api_token = self.config.get_api_token()
+        max_retries = 3
+        
+        for attempt in range(max_retries):
+            try:
+                auth_req = {
+                    "authorize": self.api_token,
+                    "req_id": self._get_request_id()
+                }
+                
+                response = await self.send_request(auth_req)
+                if response and "authorize" in response:
+                    self.authorized = True
+                    logger.info("API authorization successful")
+                    return response
+                    
+                await asyncio.sleep(2)
+            except Exception as e:
+                logger.error(f"Authorization attempt {attempt + 1} failed: {str(e)}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(2)
+        
+        return None
         
         auth_req = {
             "authorize": self.api_token,
