@@ -19,7 +19,7 @@ class ModelPredictor:
         try:
             model_types = ['short_term', 'medium_term', 'long_term']
             for model_type in model_types:
-                path = f"{base_path}/{model_type}_model.h5"
+                path = base_path
                 self.models[model_type] = load_model(path)
             logger.info("All models loaded successfully")
         except Exception as e:

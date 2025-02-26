@@ -488,11 +488,12 @@ async def main():
                 # Train each model type
                 for model_type in args.model_types:
                     logger.info(f"Training {model_type} model...")
+                    model_path = f"models/{model_type}_model.h5"
                     predictor = await train_model(
                         components,
                         historical_data,
                         model_type=model_type,
-                        save_timestamp=True,
+                        model_path=model_path,
                         args=args
                     )
 

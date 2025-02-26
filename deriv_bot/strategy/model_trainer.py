@@ -135,13 +135,18 @@ class ModelTrainer:
             logger.error(f"Error evaluating model: {str(e)}")
             return None
 
-    def save_models(self, directory):
-        """Save trained models"""
+    def save_models(self, model_path):
+        """Save trained model"""
         try:
-            if not os.path.exists(directory):
+            # Ensure directory exists
+            directory = os.path.dirname(model_path)
+            if directory and not os.path.exists(directory):
                 os.makedirs(directory)
-            self.model.save(os.path.join(directory, 'model.h5'))
+            
+            # Save model
+            self.model.save(model_path)
+            logger.info(f"Model saved to {model_path}")
             return True
         except Exception as e:
-            logger.error(f"Error saving models: {str(e)}")
+            logger.error(f"Error saving model: {str(e)}")
             return False
