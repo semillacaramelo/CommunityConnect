@@ -1,0 +1,47 @@
+Correcciones para Mejorar la Estabilidad y Fiabilidad del Sistema
+1. Manejo del Error de Conexión
+Revisión del Objeto WebSocket:
+En el archivo donde se gestiona la conexión WebSocket, revisa el uso del atributo closed. Cambia la comprobación para que use el método adecuado de la librería websockets (usualmente open o is_open). Aquí hay un ejemplo:
+if not websocket.open:
+    # Manejo de la reconexión
+Manejo de Excepciones y Fallback:
+Implementa una validación alternativa para determinar el estado de la conexión. Actualiza el código como sigue:
+try:
+    if websocket is None or not websocket.open:
+        # Código para tratar la reconexión o el manejo del error
+except AttributeError:
+    # Código en caso de que 'closed' no sea un atributo válido
+    if websocket is None:
+        # Manejo de la desconexión
+2. Corrección del Error al Guardar el Modelo
+Uso del Método Correcto:
+En main.py, modifica la invocación para usar save_models así:
+model_trainer.save_models('models')  # Especifica la ruta donde guardar el modelo
+Formato Nativo de Keras:
+Si decides implementar un nuevo método save_model, asegúrate de que el modelo se guarde con la extensión .keras de la siguiente manera:
+def save_model(self, filepath):
+    self.model.save(filepath, save_format='keras')
+3. Manejo del Error por Muestras Insuficientes
+Garantizar la Cantidad de Datos:
+En data_processor.py, modifica la función create_sequences para comprobar que el DataFrame tenga al menos 31 muestras antes de crear las secuencias. Por ejemplo:
+def create_sequences(data, seq_length=30):
+    if len(data) < seq_length + 1:
+        raise ValueError("Insufficient data: {0} samples, need at least {1}".format(len(data), seq_length + 1))
+    # Continue con la lógica para crear secuencias
+Ajuste en DataFetcher:
+Asegúrate de que la función fetch_historical_data en el DataFetcher solicite un mínimo de muestras:
+def fetch_historical_data():
+    # Lógica para obtener datos, asegurando que se consulten suficientes muestras
+    required_samples = 31  # Ajusta según necesidad
+    data = request_data_from_api()  # Simulación de llamada a API
+    if len(data) < required_samples:
+        raise ValueError("No se obtuvieron suficientes datos. Se requieren al menos {0} muestras.".format(required_samples))
+Implementar Validación Previa:
+Antes de invocar create_sequences, agrega una validación:
+data = fetch_historical_data()  # O donde sea que se obtengan los datos
+try:
+    sequences = create_sequences(data)
+except ValueError as e:
+    print(f"Error al crear secuencias: {e}")
+    # Implementar lógica adicional si es necesario
+Con estas correcciones realizadas, el sistema debería ser más robusto y confiable en su ejecución.
