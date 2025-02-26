@@ -620,6 +620,14 @@ async def main():
                         logger.error("Failed to reconnect after multiple errors. Exiting...")
                         break
 
+                # Verificar disponibilidad del activo
+                trading_enabled = await components['data_fetcher'].check_trading_enabled(symbol)
+                if not trading_enabled:
+                    logger.warning(f"El trading para {symbol} no está disponible en este momento. Esperando 5 minutos...")
+                    await asyncio.sleep(300)  # Esperar 5 minutos antes de reintentar
+                    consecutive_errors = 0  # Reset errors ya que es una condición esperada
+                    continue
+
                 # Get latest market data
                 latest_data = await components['data_fetcher'].fetch_historical_data(
                     symbol,

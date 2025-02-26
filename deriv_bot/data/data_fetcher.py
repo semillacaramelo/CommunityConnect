@@ -17,6 +17,22 @@ class DataFetcher:
         self.fetch_cooldown = 10  # Tiempo mínimo entre solicitudes para el mismo símbolo
         self.cache = {}  # Caché simple de datos por símbolo y intervalo
 
+    async def check_trading_enabled(self, symbol):
+        """Verificar si el trading está habilitado para el símbolo"""
+        try:
+            active_symbols = await self.connector.get_active_symbols()
+            if not active_symbols or "error" in active_symbols:
+                return False
+
+            for sym in active_symbols.get("active_symbols", []):
+                if sym["symbol"] == symbol:
+                    return sym["exchange_is_open"] == 1
+
+            return False
+        except Exception as e:
+            logger.error(f"Error verificando disponibilidad del símbolo: {str(e)}")
+            return False
+
     async def fetch_historical_data(self, symbol, interval, count=1000, retry_attempts=3, use_cache=True):
         """
         Fetch historical candlestick data
@@ -59,6 +75,11 @@ class DataFetcher:
                     if attempt < retry_attempts - 1:
                         await asyncio.sleep(2 * (attempt + 1))  # Espera creciente entre intentos
                     continue
+
+                # Verificar si el trading está habilitado
+                if not await self.check_trading_enabled(symbol):
+                    logger.warning(f"Trading no disponible para {symbol} en este momento")
+                    return None
 
                 # Request historical data
                 # Pedimos más candles para compensar posibles datos faltantes
