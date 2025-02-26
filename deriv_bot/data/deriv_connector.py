@@ -52,7 +52,7 @@ class DerivConnector:
                 },
                 max_queue=1024
             )
-            
+
             # Set shorter timeouts for faster failure detection
             self.ping_interval = 15
             self.consecutive_failures = 0
@@ -99,28 +99,28 @@ class DerivConnector:
         """Enhanced API authorization with retry logic"""
         self.api_token = self.config.get_api_token()
         max_retries = 3
-        
+
         for attempt in range(max_retries):
             try:
                 auth_req = {
                     "authorize": self.api_token,
                     "req_id": self._get_request_id()
                 }
-                
+
                 response = await self.send_request(auth_req)
                 if response and "authorize" in response:
                     self.authorized = True
                     logger.info("API authorization successful")
                     return response
-                    
+
                 await asyncio.sleep(2)
             except Exception as e:
                 logger.error(f"Authorization attempt {attempt + 1} failed: {str(e)}")
                 if attempt < max_retries - 1:
                     await asyncio.sleep(2)
-        
+
         return None
-        
+
         auth_req = {
             "authorize": self.api_token,
             "req_id": self._get_request_id(),
@@ -191,23 +191,21 @@ class DerivConnector:
 
                     # Mejorado el manejo de respuestas ping
                     if response:
-                        if "pong" in response:
+                        if "ping" in response and response.get("msg_type") == "ping":
                             self.last_ping_time = asyncio.get_event_loop().time()
                             self.consecutive_failures = 0
                             logger.debug("Ping successful")
+                            continue
+                        elif any(key in response for key in ["tick", "ohlc", "candles"]):
+                            self.last_ping_time = asyncio.get_event_loop().time()
+                            self.consecutive_failures = 0
+                            continue
                         else:
-                            # Verificar si hay algún otro tipo de respuesta válida
-                            if any(key in response for key in ["tick", "ohlc", "candles"]):
-                                # Recibimos datos de trading en lugar de pong, esto es válido
-                                self.last_ping_time = asyncio.get_event_loop().time()
-                                self.consecutive_failures = 0
-                                logger.debug("Received trading data instead of pong - connection still active")
-                            else:
-                                logger.warning(f"Unexpected ping response: {response}")
-                                self.consecutive_failures += 1
-                                if self.consecutive_failures >= 5:  # Aumentado de 3 a 5
-                                    logger.warning("Multiple consecutive ping failures, reconnecting...")
-                                    await self.reconnect()
+                            logger.warning(f"Unexpected ping response: {response}")
+                            self.consecutive_failures += 1
+                            if self.consecutive_failures >= 5:  # Aumentado de 3 a 5
+                                logger.warning("Multiple consecutive ping failures, reconnecting...")
+                                await self.reconnect()
                     else:
                         logger.warning("Empty ping response")
                         self.consecutive_failures += 1
@@ -243,22 +241,22 @@ class DerivConnector:
                 if current_time - self.last_ping_time > 90:
                     return False
                 return True  # Si tenemos ping reciente, la conexión está activa
-            
+
             # Si no hay último ping, hacer uno nuevo
             ping_req = {
                 "ping": 1,
                 "req_id": self._get_request_id()
             }
-            
+
             response = await asyncio.wait_for(
                 self.send_request(ping_req),
                 timeout=5
             )
-            
+
             if response and "pong" in response:
                 self.last_ping_time = asyncio.get_event_loop().time()
                 return True
-                
+
             return False
 
             # Send test ping
@@ -275,7 +273,7 @@ class DerivConnector:
 
                 # Mejorado el manejo de respuestas ping (similar a _keep_alive)
                 if response:
-                    if "pong" in response:
+                    if "ping" in response and response.get("msg_type") == "ping":
                         self.last_ping_time = asyncio.get_event_loop().time()
                         return True
                     elif any(key in response for key in ["tick", "ohlc", "candles"]):
@@ -307,14 +305,14 @@ class DerivConnector:
             base_delay = self.reconnect_delay
             max_delay = self.max_reconnect_delay
             attempt = self.reconnect_attempts
-            
+
             # Calculate delay with full jitter backoff
             delay = min(base_delay * (2 ** attempt), max_delay)
             actual_delay = random.uniform(base_delay, delay)
-            
+
             logger.info(f"Attempting reconnection {attempt + 1}/{self.max_reconnect_attempts} "
                        f"with {actual_delay:.2f}s delay")
-            
+
             await asyncio.sleep(actual_delay)
 
             # Clear existing state
@@ -323,14 +321,11 @@ class DerivConnector:
             self.consecutive_failures = 0
             self.last_message_time = None
             self.last_ping_time = None
-            
+
             # Reset connection state
             self.websocket = None
             self.authorized = False
             self.consecutive_failures = 0
-
-            logger.info(f"Waiting {wait_time:.2f}s before reconnect attempt {self.reconnect_attempts + 1}/{self.max_reconnect_attempts}")
-            await asyncio.sleep(wait_time)
 
             success = await self.connect()
             if success:
