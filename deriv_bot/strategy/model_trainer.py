@@ -28,7 +28,8 @@ import os
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Input, Concatenate
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+import tensorflow as tf
 from deriv_bot.monitor.logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -76,6 +77,25 @@ class ModelTrainer:
         }
         return models
 
+    # Custom callback for saving best model without problematic options parameter
+    class BestModelCheckpoint(tf.keras.callbacks.Callback):
+        def __init__(self, filepath, monitor='val_loss', verbose=0):
+            super().__init__()
+            self.filepath = filepath
+            self.monitor = monitor
+            self.verbose = verbose
+            self.best = float('inf')
+
+        def on_epoch_end(self, epoch, logs=None):
+            logs = logs or {}
+            current = logs.get(self.monitor)
+            if current is not None and current < self.best:
+                if self.verbose > 0:
+                    print(f'\nEpoch {epoch+1}: {self.monitor} improved from {self.best:.5f} to {current:.5f}, saving model to {self.filepath}')
+                self.best = current
+                # Use simple save without options parameter
+                self.model.save(self.filepath)
+
     def train(self, X, y, validation_split=0.2, epochs=None, batch_size=32, model_type=None):
         """
         Train the model with the given data
@@ -114,7 +134,7 @@ class ModelTrainer:
             # Save checkpoint path using .keras format
             checkpoint_path = os.path.join('models', f'{model_file}.keras')
 
-            # Enhanced callbacks for better training - FIXED to remove all unsupported parameters
+            # Custom callbacks for better training - Using custom checkpoint to avoid options parameter
             callbacks = [
                 EarlyStopping(
                     monitor='val_loss',
@@ -122,12 +142,10 @@ class ModelTrainer:
                     restore_best_weights=True,
                     verbose=1
                 ),
-                ModelCheckpoint(
+                self.BestModelCheckpoint(
                     filepath=checkpoint_path,
                     monitor='val_loss',
-                    save_best_only=True,
                     verbose=1
-                    # Removed save_format and options parameters as they're not supported in native Keras format
                 ),
                 ReduceLROnPlateau(
                     monitor='val_loss',
@@ -179,7 +197,7 @@ class ModelTrainer:
                 else:
                     path = f"{path}.keras"
 
-            # Save model in native Keras format
+            # Save model in native Keras format - no additional parameters
             self.model.save(path)
             logger.info(f"Model saved to {path} in native Keras format")
 
