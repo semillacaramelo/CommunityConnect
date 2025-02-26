@@ -137,6 +137,9 @@ async def initialize_components(args, config):
         is_demo = config.is_demo()
         risk_manager = RiskManager(is_demo=is_demo)
 
+        # Store connector reference in risk_manager
+        risk_manager.connector = connector
+
         # Warning for real mode
         if not is_demo:
             logger.warning("⚠️ RUNNING IN REAL TRADING MODE - ACTUAL FUNDS WILL BE USED! ⚠️")
@@ -383,7 +386,7 @@ async def execute_trade(components, predictor, symbol, sequence):
             # Execute trade if prediction is significant
             amount = components['config'].trading_config['stake_amount']
             if abs(prediction) >= 0.001:  # 0.1% minimum move
-                if components['risk_manager'].validate_trade(symbol, amount, prediction):
+                if components['risk_manager'].validate_trade(symbol, amount, prediction, connector=components['connector']):
                     contract_type = 'CALL' if prediction > 0 else 'PUT'
                     duration = components['config'].trading_config['duration']
 

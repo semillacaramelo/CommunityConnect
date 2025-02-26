@@ -46,7 +46,10 @@ class RiskManager:
                    f"stop_loss={self.stop_loss_pct}%, "
                    f"risk_multiplier={self.risk_multiplier}")
 
-    def validate_trade(self, symbol, amount, prediction):
+        # Store reference to connector for later use
+        self.connector = None
+
+    def validate_trade(self, symbol, amount, prediction, connector=None):
         """
         Validate if trade meets risk parameters
 
@@ -54,8 +57,13 @@ class RiskManager:
             symbol: Trading symbol
             amount: Trade amount
             prediction: Predicted price movement
+            connector: API connector instance for account operations
         """
         try:
+            # Store connector reference if provided
+            if connector is not None:
+                self.connector = connector
+
             # More permissive validation for demo account
             if self.is_demo:
                 adjusted_amount = amount * self.risk_multiplier
@@ -66,7 +74,13 @@ class RiskManager:
                 if self.daily_loss + adjusted_amount > self.max_daily_loss:
                     logger.warning("Demo maximum daily loss limit would be exceeded")
                     logger.info(f"Current daily loss: {self.daily_loss}, Limit: {self.max_daily_loss}")
-                    self.reset_demo_balance()
+
+                    # Only attempt reset if connector is available
+                    if self.connector:
+                        # Use async_to_sync to properly await the async function
+                        self._reset_demo_balance_sync()
+                    else:
+                        logger.warning("Cannot reset demo balance: No connector available")
                     return True  # Allow trade after reset in demo
 
                 logger.info(f"Demo trade validated - Amount: {adjusted_amount}, "
@@ -97,9 +111,19 @@ class RiskManager:
         logger.info(f"Updated daily loss: {self.daily_loss} (change: {loss_amount:+.2f})")
 
         # Auto-reset for demo account if loss is too high
-        if self.is_demo and self.daily_loss >= self.max_daily_loss:
+        if self.is_demo and self.daily_loss >= self.max_daily_loss and self.connector:
             logger.warning(f"Demo daily loss ({self.daily_loss}) exceeded limit ({self.max_daily_loss})")
-            self.reset_demo_balance()
+            self._reset_demo_balance_sync()
+
+    def _reset_demo_balance_sync(self):
+        """Synchronous wrapper for reset_demo_balance"""
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            return loop.run_until_complete(self.reset_demo_balance(self.connector))
+        except Exception as e:
+            logger.error(f"Error in sync reset demo balance: {str(e)}")
+            return False
 
     async def reset_demo_balance(self, connector):
         """Reset demo account balance and loss tracking"""
