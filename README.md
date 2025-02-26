@@ -1,3 +1,48 @@
+# ML Trading Bot for Deriv.com
+
+## English Documentation
+
+### Project Description
+A modular Python-based trading bot for Deriv.com utilizing machine learning techniques for automated trading strategies.
+
+Key Components:
+- Deriv API integration
+- Machine learning-powered trade decision making
+- Modular architecture for extensibility
+- Demo and real trading mode support
+
+### Local Setup & Deployment
+For detailed instructions on setting up and deploying this project on your local machine using Visual Studio Code, please refer to the [Setup Guide](SETUP_GUIDE.md).
+
+The setup guide covers:
+- System requirements
+- Installation steps
+- Environment configuration
+- VS Code setup
+- Running and debugging the bot
+- Troubleshooting common issues
+
+### Quick Start
+```bash
+# Clone the repository
+git clone <repository-url>
+cd deriv-ml-trading-bot
+
+# Run the setup script (configures everything automatically)
+python environment_setup.py --vscode
+
+# Test API connectivity
+python test_api_connectivity.py
+
+# Train models
+python main.py --train-only
+
+# Run in demo mode
+python main.py --env demo
+```
+
+---
+
 # Bot de Trading con ML para Deriv.com
 
 ## Descripción del Proyecto
