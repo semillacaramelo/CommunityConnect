@@ -61,7 +61,6 @@ class ModelTrainer:
             LSTM(units=units // 2, return_sequences=False),
             Dropout(dropout_rate),
             Dense(units=32, activation='relu'),
-            Dropout(dropout_rate),
             Dense(units=1)
         ])
 
@@ -115,7 +114,7 @@ class ModelTrainer:
             # Save checkpoint path using .keras format
             checkpoint_path = os.path.join('models', f'{model_file}.keras')
 
-            # Enhanced callbacks for better training - FIXED for native Keras format
+            # Enhanced callbacks for better training - FIXED to remove all unsupported parameters
             callbacks = [
                 EarlyStopping(
                     monitor='val_loss',
@@ -128,6 +127,7 @@ class ModelTrainer:
                     monitor='val_loss',
                     save_best_only=True,
                     verbose=1
+                    # Removed save_format and options parameters as they're not supported in native Keras format
                 ),
                 ReduceLROnPlateau(
                     monitor='val_loss',
@@ -179,7 +179,7 @@ class ModelTrainer:
                 else:
                     path = f"{path}.keras"
 
-            # Save model in native Keras format - FIXED to remove options parameter
+            # Save model in native Keras format
             self.model.save(path)
             logger.info(f"Model saved to {path} in native Keras format")
 

@@ -336,7 +336,7 @@ async def train_model(components, historical_data, model_type='standard', save_t
             epochs=epochs if epochs is not None else 50  # Provide default value if None
         )
 
-        history = model_trainer.train(X, y)
+        history = model_trainer.train(X, y, model_type=model_type)
 
         if history:
             logger.info(f"{model_type} model training completed successfully")
@@ -350,59 +350,46 @@ async def train_model(components, historical_data, model_type='standard', save_t
                     model_path = components['model_manager'].save_model_with_timestamp(
                         model_trainer.model,
                         base_name="trained_model",
-                        model_type=model_type
+                        model_type=model_type,
+                        scaler=scaler
                     )
                     if model_path:
                         logger.info(f"Saved {model_type} model to {model_path}")
 
-                        # Try to save model metadata for easier loading
-                        try:
-                            # Save scaler and model parameters for future use
-                            metadata_path = model_path.replace('.h5', '_metadata.pkl')
-                            with open(metadata_path, 'wb') as f:
-                                import pickle
-                                pickle.dump({
-                                    'scaler': scaler,
-                                    'input_shape': (X.shape[1], X.shape[2]),
-                                    'creation_date': datetime.now().isoformat()
-                                }, f)
-                            logger.info(f"Saved model metadata to {metadata_path}")
-                        except Exception as e:
-                            logger.warning(f"Non-critical error saving model metadata: {str(e)}")
-
-                        return ModelPredictor(model_path, scaler=scaler)
+                        # Create predictor with the model and scaler
+                        return ModelPredictor(model_path)
                     else:
                         logger.error(f"Failed to save {model_type} model")
                         return None
                 else:
                     # Save as standard name (will overwrite)
-                    # First try SavedModel format (preferred in newer TensorFlow)
+                    # Use native Keras format
                     try:
                         model_dir = os.path.join('models', f'{model_type}_model')
-                        model_trainer.model.save(model_dir, save_format='tf')
+                        model_trainer.model.save(model_dir)
                         logger.info(f"{model_type} model saved to {model_dir} in SavedModel format")
-                        return ModelPredictor(model_dir, scaler=scaler)
+                        return ModelPredictor(model_dir)
                     except Exception as e:
                         logger.warning(f"Failed to save in SavedModel format, trying HDF5: {str(e)}")
 
-                        # Fall back to HDF5 (.h5) format
+                        # Fall back to .keras format
                         try:
-                            model_path = os.path.join('models', f'{model_type}_model.h5')
-                            model_trainer.model.save(model_path, save_format='h5')
-                            logger.info(f"{model_type} model saved to {model_path} in HDF5 format")
-                            return ModelPredictor(model_path, scaler=scaler)
+                            model_path = os.path.join('models', f'{model_type}_model.keras')
+                            model_trainer.model.save(model_path)
+                            logger.info(f"{model_type} model saved to {model_path} in keras format")
+                            return ModelPredictor(model_path)
                         except Exception as e:
-                            logger.error(f"Error saving {model_type} model in HDF5 format: {str(e)}")
+                            logger.error(f"Error saving {model_type} model in keras format: {str(e)}")
                             return None
             except Exception as e:
                 logger.error(f"Error saving {model_type} model: {str(e)}")
 
                 # Try emergency save to a different location
                 try:
-                    emergency_path = os.path.join('models', f'emergency_{model_type}_{int(time.time())}.h5')
+                    emergency_path = os.path.join('models', f'emergency_{model_type}_{int(time.time())}.keras')
                     model_trainer.model.save(emergency_path)
                     logger.warning(f"Emergency save of {model_type} model to {emergency_path}")
-                    return ModelPredictor(emergency_path, scaler=scaler)
+                    return ModelPredictor(emergency_path)
                 except Exception as e2:
                     logger.error(f"Emergency save also failed: {str(e2)}")
                     return None

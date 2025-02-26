@@ -243,9 +243,12 @@ class ModelManager:
             filename = f"{base_name}{type_suffix}_{timestamp}.keras"
             save_path = os.path.join(self.models_dir, filename)
 
-            # Save the model in native Keras format
-            model.save(save_path, save_format='keras')
+            # Save the model in native Keras format without any additional parameters
+            model.save(save_path)
             logger.info(f"Model saved to {save_path}")
+
+            # Initialize metadata dictionary
+            metadata = {}
 
             # Save scaler as metadata if provided
             if scaler is not None:
@@ -259,7 +262,8 @@ class ModelManager:
             if base_name == "best_model" and model_type:
                 best_model_path = os.path.join(self.models_dir, f"best_model_{model_type}.keras")
                 try:
-                    model.save(best_model_path, save_format='keras')
+                    # Save the best model without any additional parameters
+                    model.save(best_model_path)
                     logger.info(f"Best model saved to {best_model_path}")
 
                     # Save scaler as metadata for best model as well
