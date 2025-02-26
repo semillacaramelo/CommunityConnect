@@ -33,6 +33,17 @@ class DerivConnector:
                 logger.error(f"Authorization failed: {error_msg}")
                 return False
 
+    async def close(self):
+        """Close WebSocket connection"""
+        self.active = False
+        if self.websocket:
+            try:
+                await self.websocket.close()
+                logger.info("Connection closed")
+            except Exception as e:
+                logger.error(f"Error closing connection: {str(e)}")
+
+
             self.active = True
             logger.info("Successfully connected to Deriv API")
 
@@ -169,6 +180,7 @@ logger = setup_logger(__name__)
 class DerivConnector:
     def __init__(self):
         self.websocket = None
+        self.active = False
         
     async def check_connection(self):
         """Check WebSocket connection status with proper error handling"""
