@@ -7,6 +7,8 @@ import argparse
 import sys
 import signal
 from datetime import datetime, timedelta
+import pandas as pd  # Add explicit pandas import
+import numpy as np   # Add numpy import for completeness
 from deriv_bot.data.deriv_connector import DerivConnector
 from deriv_bot.data.data_fetcher import DataFetcher
 from deriv_bot.data.data_processor import DataProcessor
@@ -93,6 +95,7 @@ async def initialize_components(args, config):
         # Connect to Deriv API with retry
         max_retries = 5
         retry_delay = 10  # Seconds between retries
+        connected = False  # Initialize the variable
 
         for attempt in range(max_retries):
             connected = await connector.connect()
@@ -208,7 +211,6 @@ async def load_historical_data(data_fetcher, args, symbol, count=1000):
         if data_source in ['file', 'both']:
             data_file = f"data/{symbol}_historical.csv"
             if os.path.exists(data_file):
-                import pandas as pd
                 try:
                     file_data = pd.read_csv(data_file, index_col='time', parse_dates=True)
                     logger.info(f"Loaded {len(file_data)} historical data points from {data_file}")
@@ -252,7 +254,6 @@ async def load_historical_data(data_fetcher, args, symbol, count=1000):
 
         # Combine data if both sources are used
         if data_source == 'both' and file_data is not None and api_data is not None:
-            import pandas as pd
             # Use file_data for older entries, api_data for more recent
             combined_data = pd.concat([file_data, api_data])
             # Remove duplicates (keeping new data)
@@ -282,7 +283,7 @@ async def train_model(components, historical_data, model_type='standard', save_t
     try:
         # Get custom training parameters if provided
         sequence_length = args.sequence_length if args and args.sequence_length else None
-        epochs = args.epochs if args and args.epochs else None
+        epochs = args.epochs if args and args.epochs else None  # This will be passed as int or None
 
         logger.info(f"Training {model_type} model with {len(historical_data)} data points")
 
@@ -306,7 +307,7 @@ async def train_model(components, historical_data, model_type='standard', save_t
         # Train the model
         model_trainer = ModelTrainer(
             input_shape=(X.shape[1], X.shape[2]),
-            epochs=epochs
+            epochs=epochs if epochs is not None else 50  # Provide default value if None
         )
 
         history = model_trainer.train(X, y)
@@ -488,12 +489,12 @@ async def main():
                 # Train each model type
                 for model_type in args.model_types:
                     logger.info(f"Training {model_type} model...")
-                    model_path = f"models/{model_type}_model.h5"
+                    # Train the model with save_timestamp=True instead of providing model_path
                     predictor = await train_model(
                         components,
                         historical_data,
                         model_type=model_type,
-                        model_path=model_path,
+                        save_timestamp=True,  # Fix: use save_timestamp instead of model_path
                         args=args
                     )
 

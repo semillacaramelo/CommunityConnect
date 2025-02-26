@@ -9,7 +9,12 @@ import shutil
 import platform
 import subprocess
 from pathlib import Path
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    print("Warning: python-dotenv not installed. Will attempt to install it.")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "python-dotenv"])
+    from dotenv import load_dotenv
 
 def setup_environment():
     """Main environment setup function"""
@@ -242,7 +247,8 @@ def check_dependencies():
             "tensorflow",
             "websockets",
             "matplotlib",
-            "sklearn"
+            "sklearn",
+            "python-deriv-api"
         ]
 
         missing_packages = []
@@ -250,7 +256,7 @@ def check_dependencies():
 
         for package in required_packages:
             try:
-                importlib.import_module(package)
+                importlib.import_module(package.replace("-", "_"))
                 installed_packages.append(package)
             except ImportError:
                 missing_packages.append(package)
@@ -271,7 +277,7 @@ def check_dependencies():
             if not args.no_input:
                 install = input("\nWould you like to install missing dependencies now? (y/n): ")
                 if install.lower() == 'y':
-                    subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+                    subprocess.check_call([sys.executable, "-m", "pip", "install", *missing_packages])
                     print("Dependencies installed successfully!")
         else:
             print("\nAll required Python dependencies are installed!")

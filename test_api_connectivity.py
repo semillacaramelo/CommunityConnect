@@ -36,12 +36,11 @@ async def test_api_connectivity(test_mode='demo', verbose=False, extended_test=F
 
         # Configurar el entorno correcto para la prueba
         config = Config()
+        original_env = config.get_environment()  # Almacenar entorno actual
+        original_confirmed = os.getenv('DERIV_REAL_MODE_CONFIRMED')  # Almacenar configuración actual
+
         if test_mode == 'real':
             if os.getenv('DERIV_API_TOKEN_REAL'):
-                # Guardar valor actual para restaurar después
-                original_env = config.get_environment()
-                original_confirmed = os.getenv('DERIV_REAL_MODE_CONFIRMED')
-
                 # Establecer temporalmente para prueba
                 os.environ['DERIV_REAL_MODE_CONFIRMED'] = 'yes'
                 if not config.set_environment('real'):
