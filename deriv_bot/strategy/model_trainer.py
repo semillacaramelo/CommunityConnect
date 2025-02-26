@@ -99,15 +99,17 @@ class ModelTrainer:
             logger.error(f"Error in model training: {str(e)}")
             return None
 
-    def save_models(self, base_path='models'):
+    def save_models(self, directory='models'):
         """Save all models in the ensemble"""
         try:
             for name, model in self.models.items():
-                path = f"{base_path}/{name}_model.h5"
-                model.save(path)
+                path = f"{directory}/{name}_model.keras"
+                model.save(path, save_format='keras')
                 logger.info(f"Model {name} saved to {path}")
+            return True
         except Exception as e:
             logger.error(f"Error saving models: {str(e)}")
+            return False
 
     def evaluate_models(self, X_test, y_test):
         """

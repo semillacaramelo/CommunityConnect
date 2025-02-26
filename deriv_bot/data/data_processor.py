@@ -138,3 +138,39 @@ class DataProcessor:
         except Exception as e:
             logger.error(f"Error in inverse transform: {str(e)}")
             return None
+from deriv_bot.monitor.logger import setup_logger
+
+logger = setup_logger(__name__)
+
+class DataProcessor:
+    def create_sequences(self, data, seq_length=30):
+        """Create sequences with validation"""
+        try:
+            if len(data) < seq_length + 1:
+                raise ValueError(f"Insufficient data: {len(data)} samples, need at least {seq_length + 1}")
+            
+            sequences = []
+            targets = []
+            
+            for i in range(len(data) - seq_length):
+                seq = data[i:(i + seq_length)]
+                target = data[i + seq_length]
+                sequences.append(seq)
+                targets.append(target)
+                
+            return sequences, targets
+        except Exception as e:
+            logger.error(f"Error creating sequences: {str(e)}")
+            return None, None
+
+    def prepare_data(self, df, sequence_length=30):
+        """Prepare data with validation checks"""
+        try:
+            if len(df) < sequence_length + 1:
+                raise ValueError(f"Insufficient data points: {len(df)}, minimum required: {sequence_length + 1}")
+                
+            # Data preparation logic here
+            return processed_data
+        except Exception as e:
+            logger.error(f"Error preparing data: {str(e)}")
+            return None

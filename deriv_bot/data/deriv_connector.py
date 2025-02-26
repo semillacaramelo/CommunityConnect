@@ -161,3 +161,34 @@ class DerivConnector:
             "req_id": self._get_request_id()
         }
         return await self.send_request(active_symbols_req)
+import websockets
+from deriv_bot.monitor.logger import setup_logger
+
+logger = setup_logger(__name__)
+
+class DerivConnector:
+    def __init__(self):
+        self.websocket = None
+        
+    async def check_connection(self):
+        """Check WebSocket connection status with proper error handling"""
+        try:
+            if self.websocket is None or not self.websocket.open:
+                logger.warning("WebSocket connection lost or not initialized")
+                return False
+            return True
+        except AttributeError:
+            logger.error("WebSocket object is invalid")
+            return False
+
+    async def connect(self):
+        """Connect with improved error handling"""
+        try:
+            if not await self.check_connection():
+                self.websocket = await websockets.connect('wss://ws.binaryws.com/websockets/v3')
+                logger.info("WebSocket connection established")
+                return True
+            return True
+        except Exception as e:
+            logger.error(f"Connection error: {str(e)}")
+            return False
