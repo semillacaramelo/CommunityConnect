@@ -43,10 +43,13 @@ class DerivConnector:
             logger.debug(f"Connecting to {self.ws_url}")
             self.websocket = await websockets.connect(
                 self.ws_url,
-                ping_interval=None,  # We'll handle pings manually
-                ping_timeout=None,   # Disable auto ping timeout
-                close_timeout=15,    # Aumentado para dar más tiempo
-                max_size=10 * 1024 * 1024  # 10MB max message size
+                ping_interval=20,
+                ping_timeout=60,
+                close_timeout=30,
+                max_size=10 * 1024 * 1024,
+                extra_headers={
+                    'User-Agent': 'deriv-bot/1.0.0'
+                }
             )
 
             # Authorize connection
@@ -89,12 +92,12 @@ class DerivConnector:
 
     async def _authorize(self):
         """Authorize connection using API token"""
-        # Get the current token (which might have changed if environment was switched)
         self.api_token = self.config.get_api_token()
-
+        
         auth_req = {
             "authorize": self.api_token,
-            "req_id": self._get_request_id()
+            "req_id": self._get_request_id(),
+            "passthrough": {"handle_errors": 1}
         }
 
         # Intentar autorización con reintentos
@@ -258,10 +261,15 @@ class DerivConnector:
         try:
             await self.close()
 
-            # Backoff exponencial con jitter mejorado
-            delay = min(self.reconnect_delay * (1.5 ** self.reconnect_attempts), self.max_reconnect_delay)
-            jitter = random.uniform(0.8, 1.2)  # Add 20% jitter
+            # Backoff exponencial con jitter optimizado
+            delay = min(self.reconnect_delay * (2 ** self.reconnect_attempts), self.max_reconnect_delay)
+            jitter = random.uniform(0.5, 1.5)  # Increased jitter range
             wait_time = delay * jitter
+            
+            # Reset connection state
+            self.websocket = None
+            self.authorized = False
+            self.consecutive_failures = 0
 
             logger.info(f"Waiting {wait_time:.2f}s before reconnect attempt {self.reconnect_attempts + 1}/{self.max_reconnect_attempts}")
             await asyncio.sleep(wait_time)
