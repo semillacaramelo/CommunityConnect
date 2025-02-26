@@ -172,7 +172,7 @@ class DerivConnector:
 
                 # Check if we've received any messages recently
                 current_time = asyncio.get_event_loop().time()
-                if self.last_message_time and current_time - self.last_message_time > 60:
+                if self.last_message_time and current_time - self.last_message_time > 30:  # Reducido a 30 segundos para detectar desconexiones más rápido
                     logger.warning("No messages received in the last minute, reconnecting...")
                     await self.reconnect()
                     continue

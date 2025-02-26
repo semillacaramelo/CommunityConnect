@@ -146,9 +146,11 @@ class DataFetcher:
                 # Verificar si tenemos suficientes velas
                 if len(candles) < count:
                     logger.warning(f"Received fewer candles than requested: {len(candles)} vs {count}")
-                    # Si es demasiado poco, podríamos reintentar
-                    if len(candles) < count * 0.5 and attempt < retry_attempts - 1:  # Menos del 50% de lo solicitado
-                        logger.warning(f"Insufficient data ({len(candles)} candles), retrying... {attempt+1}/{retry_attempts}")
+                    # Si es demasiado poco, intentar con un count mayor
+                    if len(candles) < count * 0.8 and attempt < retry_attempts - 1:  # Menos del 80% de lo solicitado
+                        increased_count = min(int(count * 1.5), 5000)  # Aumentar 50% pero no más de 5000
+                        logger.warning(f"Requesting increased count of {increased_count} candles...")
+                        request["count"] = increased_count
                         await asyncio.sleep(2)
                         continue
 
