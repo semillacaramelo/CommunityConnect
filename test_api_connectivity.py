@@ -28,73 +28,75 @@ async def test_api_connectivity(test_mode='demo', verbose=False, extended_test=F
     """
     try:
         # Check environment variables
+        print("\n===== API CONNECTIVITY TEST =====")
         print("\nVerifying environment variables:")
         env_vars = ['DERIV_API_TOKEN_DEMO', 'DERIV_API_TOKEN_REAL', 'DERIV_BOT_ENV', 'APP_ID']
         for var in env_vars:
             value = os.getenv(var)
-            print(f"✓ {var}: {'Configured' if value else 'Not configured'}")
+            status = '✅ Configured' if value else '❌ Not configured'
+            print(f"- {var}: {status}")
 
-        # Configurar el entorno correcto para la prueba
+        # Configure the correct environment for testing
         config = Config()
-        original_env = config.get_environment()  # Almacenar entorno actual
-        original_confirmed = os.getenv('DERIV_REAL_MODE_CONFIRMED')  # Almacenar configuración actual
+        original_env = config.get_environment()  # Store current environment
+        original_confirmed = os.getenv('DERIV_REAL_MODE_CONFIRMED')  # Store current config
 
         if test_mode == 'real':
             if os.getenv('DERIV_API_TOKEN_REAL'):
-                # Establecer temporalmente para prueba
+                # Temporarily set for testing
                 os.environ['DERIV_REAL_MODE_CONFIRMED'] = 'yes'
                 if not config.set_environment('real'):
-                    print("\n❗ No se pudo configurar el entorno REAL para pruebas")
-                    print("  Verifique que DERIV_API_TOKEN_REAL esté configurado correctamente")
+                    print("\n❌ Could not set REAL environment for testing")
+                    print("  Verify that DERIV_API_TOKEN_REAL is configured correctly")
                     return
             else:
-                print("\n❗ No se puede probar el entorno REAL: Falta DERIV_API_TOKEN_REAL")
+                print("\n❌ Cannot test REAL environment: Missing DERIV_API_TOKEN_REAL")
                 return
         else:
-            # Asegurar que estamos en modo demo para la prueba
+            # Ensure we're in demo mode for testing
             config.set_environment('demo')
 
-        print(f"\nProbando conexión a API en modo {config.get_environment().upper()}...")
+        print(f"\nTesting API connection in {config.get_environment().upper()} mode...")
 
-        # Crear y probar el conector
+        # Create and test the connector
         start_time = time.time()
         connector = DerivConnector(config)
         connected = await connector.connect()
 
         if not connected:
-            print("❌ Falló la conexión a la API de Deriv")
+            print("❌ Failed to connect to Deriv API")
             return
 
         connection_time = time.time() - start_time
-        print(f"✓ Conexión exitosa a la API de Deriv ({connection_time:.2f}s)")
+        print(f"✅ Successfully connected to Deriv API ({connection_time:.2f}s)")
 
-        # Probar obtención del tiempo del servidor
-        print("\nVerificando tiempo del servidor...")
+        # Test server time retrieval
+        print("\nVerifying server time...")
         time_response = await connector.get_server_time()
 
         if time_response and "time" in time_response:
             server_time = datetime.fromtimestamp(time_response["time"])
             local_time = datetime.now()
             time_diff = abs((local_time - server_time).total_seconds())
-            print(f"✓ Tiempo del servidor: {server_time}")
-            print(f"  Tiempo local: {local_time}")
-            print(f"  Diferencia: {time_diff:.2f} segundos")
+            print(f"✅ Server time: {server_time}")
+            print(f"  Local time: {local_time}")
+            print(f"  Difference: {time_diff:.2f} seconds")
         else:
-            print("❌ No se pudo obtener el tiempo del servidor")
+            print("❌ Could not retrieve server time")
 
-        # Obtener símbolos disponibles
-        print("\nObteniendo símbolos disponibles...")
+        # Get available symbols
+        print("\nRetrieving available symbols...")
         data_fetcher = DataFetcher(connector)
         symbols = await data_fetcher.get_available_symbols()
 
         if symbols:
-            print(f"✓ Se encontraron {len(symbols)} símbolos de trading")
-            print("Símbolos de ejemplo:", symbols[:5])
+            print(f"✅ Found {len(symbols)} trading symbols")
+            print("Example symbols:", symbols[:5])
         else:
-            print("❌ No se pudieron obtener símbolos de trading")
+            print("❌ Could not retrieve trading symbols")
 
-        # Probar obtención de datos históricos
-        print("\nProbando obtención de datos históricos para EUR/USD...")
+        # Test historical data retrieval
+        print("\nTesting historical data retrieval for EUR/USD...")
         historical_data = await data_fetcher.fetch_historical_data(
             symbol="frxEURUSD",
             interval=60,  # 1-minute candles
@@ -102,27 +104,27 @@ async def test_api_connectivity(test_mode='demo', verbose=False, extended_test=F
         )
 
         if historical_data is not None:
-            print(f"✓ Datos históricos obtenidos correctamente ({len(historical_data)} velas)")
-            print("\nMuestra de datos:")
+            print(f"✅ Historical data successfully retrieved ({len(historical_data)} candles)")
+            print("\nSample data:")
             print(historical_data.head())
         else:
-            print("❌ No se pudieron obtener datos históricos")
+            print("❌ Could not retrieve historical data")
 
-        # Prueba de suscripción a ticks
-        print("\nProbando suscripción a ticks...")
+        # Test tick subscription
+        print("\nTesting tick subscription...")
         tick_response = await data_fetcher.subscribe_to_ticks("frxEURUSD")
 
         if tick_response and "error" not in tick_response:
-            print("✓ Suscripción a ticks exitosa")
+            print("✅ Tick subscription successful")
         else:
-            print("❌ No se pudo suscribir a ticks")
+            print("❌ Tick subscription failed")
 
-        # Pruebas extendidas si se solicitan
+        # Extended tests if requested
         if extended_test:
-            print("\n=== Ejecutando pruebas extendidas ===")
+            print("\n=== Running Extended Tests ===")
 
-            # Prueba de carga: intentar obtener un conjunto grande de datos
-            print("\nPrueba de carga: Obteniendo 1000 velas...")
+            # Load test: try to get a large dataset
+            print("\nLoad test: Retrieving 1000 candles...")
             start_time = time.time()
             large_dataset = await data_fetcher.fetch_historical_data(
                 symbol="frxEURUSD",
@@ -132,24 +134,24 @@ async def test_api_connectivity(test_mode='demo', verbose=False, extended_test=F
             load_time = time.time() - start_time
 
             if large_dataset is not None and len(large_dataset) > 900:
-                print(f"✓ Conjunto grande de datos obtenido ({len(large_dataset)} velas en {load_time:.2f}s)")
+                print(f"✅ Large dataset retrieved ({len(large_dataset)} candles in {load_time:.2f}s)")
             else:
-                print(f"❌ Problemas al obtener conjunto grande de datos")
+                print(f"❌ Issues retrieving large dataset")
                 if large_dataset is not None:
-                    print(f"  Se solicitaron 1000 velas, se recibieron {len(large_dataset)}")
+                    print(f"  Requested 1000 candles, received {len(large_dataset)}")
 
-            # Prueba de reconexión
-            print("\nPrueba de reconexión: Simulando desconexión...")
+            # Reconnection test
+            print("\nReconnection test: Simulating disconnection...")
             await connector.close()
             reconnect_result = await connector.reconnect()
 
             if reconnect_result:
-                print("✓ Reconexión exitosa")
+                print("✅ Reconnection successful")
             else:
-                print("❌ Falló la reconexión")
+                print("❌ Reconnection failed")
 
-            # Prueba de frecuencia de solicitudes
-            print("\nPrueba de frecuencia de solicitudes: 5 solicitudes rápidas...")
+            # Request frequency test
+            print("\nRequest frequency test: 5 rapid requests...")
             for i in range(5):
                 start_req = time.time()
                 mini_data = await data_fetcher.fetch_historical_data(
@@ -158,34 +160,35 @@ async def test_api_connectivity(test_mode='demo', verbose=False, extended_test=F
                     count=5
                 )
                 req_time = time.time() - start_req
-                status = "✓" if mini_data is not None else "❌"
-                print(f"  Solicitud {i+1}: {status} ({req_time:.2f}s)")
+                status = "✅" if mini_data is not None else "❌"
+                print(f"  Request {i+1}: {status} ({req_time:.2f}s)")
 
-            print("\nPruebas extendidas completadas")
+            print("\nExtended tests completed")
 
-        # Limpiar
+        # Cleanup
         await connector.close()
-        print("\n✓ Conexión cerrada correctamente")
+        print("\n✅ Connection properly closed")
 
-        # Si cambiamos al modo real solo para la prueba, restauramos
+        # If we changed to real mode just for testing, restore
         if test_mode == 'real' and original_env != 'real':
             config.set_environment(original_env)
             if original_confirmed:
                 os.environ['DERIV_REAL_MODE_CONFIRMED'] = original_confirmed
             else:
                 os.environ.pop('DERIV_REAL_MODE_CONFIRMED', None)
-            print(f"\nEntorno restaurado a {config.get_environment().upper()}")
+            print(f"\nEnvironment restored to {config.get_environment().upper()}")
 
-        # Resumen
-        print("\n=== Resumen de la prueba ===")
-        print(f"✓ Entorno: {config.get_environment().upper()}")
-        print(f"✓ Conexión a API: {'Exitosa' if connected else 'Fallida'}")
-        print(f"✓ Obtención de símbolos: {'Exitosa' if symbols else 'Fallida'}")
-        print(f"✓ Datos históricos: {'Exitosos' if historical_data is not None else 'Fallidos'}")
-        print(f"✓ Suscripción a ticks: {'Exitosa' if tick_response and 'error' not in tick_response else 'Fallida'}")
+        # Summary
+        print("\n=== Test Summary ===")
+        print(f"✅ Environment: {config.get_environment().upper()}")
+        print(f"✅ API Connection: {'Successful' if connected else 'Failed'}")
+        print(f"✅ Symbol Retrieval: {'Successful' if symbols else 'Failed'}")
+        print(f"✅ Historical Data: {'Successful' if historical_data is not None else 'Failed'}")
+        print(f"✅ Tick Subscription: {'Successful' if tick_response and 'error' not in tick_response else 'Failed'}")
+        print("\n============================")
 
     except Exception as e:
-        print(f"\n❌ Error durante la prueba: {str(e)}")
+        print(f"\n❌ Error during test: {str(e)}")
         logger.exception("Error during API test")
 
 def main():
@@ -200,9 +203,9 @@ def main():
 
     args = parser.parse_args()
 
-    print("Iniciando prueba de conectividad con la API de Deriv...")
+    print("Starting Deriv API connectivity test...")
     print("===============================================")
-    print(f"Modo: {args.mode.upper()}")
+    print(f"Mode: {args.mode.upper()}")
 
     asyncio.run(test_api_connectivity(
         test_mode=args.mode,

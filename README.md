@@ -15,22 +15,63 @@ deriv_bot/
 └── utils/              # Utilidades generales
 ```
 
-## Configuración para Entornos Live
+## Configuración para Desarrollo Local
 
 ### Requisitos del Sistema
 - Python 3.11 o superior
 - Dependencias especificadas en `requirements.txt`
 - Cuenta en Deriv.com con tokens API
+- Visual Studio Code (recomendado para desarrollo)
 
 ### Instalación y Configuración
 
-#### 1. Instalación de Dependencias
+#### 1. Clonar el Repositorio
+```bash
+git clone https://github.com/tu-usuario/deriv-ml-trading-bot.git
+cd deriv-ml-trading-bot
+```
+
+#### 2. Configurar el Entorno Virtual (Recomendado)
+```bash
+# Para Windows
+python -m venv venv
+venv\Scripts\activate
+
+# Para macOS/Linux
+python3 -m venv venv
+source venv/bin/activate
+```
+
+#### 3. Instalación de Dependencias
 ```bash
 pip install -r requirements.txt
 ```
 
-#### 2. Configuración del Entorno
-Ejecuta el script de configuración:
+#### 4. Configuración del Archivo .env
+Copia el archivo `.env.example` y renómbralo a `.env`:
+```bash
+# Windows
+copy .env.example .env
+
+# macOS/Linux
+cp .env.example .env
+```
+
+Edita el archivo `.env` con tus tokens de API de Deriv:
+```
+DERIV_API_TOKEN_DEMO=tu_token_de_cuenta_demo
+DERIV_API_TOKEN_REAL=tu_token_de_cuenta_real
+DERIV_BOT_ENV=demo
+APP_ID=1089
+```
+
+Para obtener los tokens API:
+1. Inicia sesión en [Deriv.com](https://deriv.com)
+2. Ve a Configuración de Cuenta > Seguridad y Límites > Tokens API
+3. Genera tokens tanto para tu cuenta Demo como Real
+
+#### 5. Configuración Asistida (Opcional)
+Como alternativa, puedes utilizar el script de configuración automático:
 ```bash
 python environment_setup.py
 ```
@@ -40,18 +81,16 @@ Para configurar VS Code al mismo tiempo:
 python environment_setup.py --vscode
 ```
 
-#### 3. Configuración de Tokens API de Deriv
-- El script de configuración te guiará para ingresar:
-  - Token API para cuenta Demo
-  - Token API para cuenta Real
-  - Otros parámetros de configuración
-
-#### 4. Verificar la Conexión a la API
+#### 6. Verificar la Conexión a la API
 ```bash
 python test_api_connectivity.py
 ```
 
-## Ejecución en Entornos Live
+## Uso con Visual Studio Code
+
+Para una configuración detallada de VS Code, consulta [VSCODE_SETUP.md](VSCODE_SETUP.md).
+
+## Ejecución en Entornos de Desarrollo
 
 ### Modo de Entrenamiento (sin trading)
 ```bash
@@ -108,18 +147,7 @@ python clean_models.py --action stats
 python clean_models.py --action both
 ```
 
-## Configuración de VS Code
-Para facilitar el desarrollo y ejecución con VS Code:
-```bash
-python environment_setup.py --vscode
-```
-
-Esto creará:
-- Configuraciones de lanzamiento para diferentes modos
-- Configuración del entorno de desarrollo
-- Integración con el depurador
-
-## Solución de Problemas en Entornos Live
+## Solución de Problemas en Entornos de Desarrollo
 
 ### Error de Conexión a la API
 - Verifica que tus tokens API sean correctos y no hayan expirado

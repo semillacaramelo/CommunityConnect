@@ -39,7 +39,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python main.py --env demo --debug"
+args = "python main.py --env demo --debug --check-connection"
 
 [[workflows.workflow]]
 name = "API Test"

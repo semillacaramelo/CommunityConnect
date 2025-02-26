@@ -44,12 +44,15 @@ class DerivConnector:
         self.last_ping_time = None
         self.ping_interval = 30
         self.reconnect_attempts = 0
-        self.max_reconnect_attempts = 15  # Aumentado para permitir más intentos
+        self.max_reconnect_attempts = 15
         self.reconnect_delay = 5
-        self.max_reconnect_delay = 120  # Aumentado el tiempo máximo de espera
+        self.max_reconnect_delay = 120
         self.consecutive_failures = 0
         self.last_message_time = None
-        self.authorized = False  # Nuevo flag para rastrear si la autorización fue exitosa
+        self.authorized = False
+        self.is_virtual = None
+        self.balance = None
+        self.currency = None
 
         # Log the environment we're connecting to
         env_mode = "REAL" if not self.config.is_demo() else "DEMO"
@@ -58,6 +61,10 @@ class DerivConnector:
     async def connect(self):
         """Establish WebSocket connection to Deriv API"""
         try:
+            if self.websocket and not self.websocket.closed:
+                logger.debug("Connection already exists")
+                return True
+
             logger.debug(f"Connecting to {self.ws_url}")
             self.websocket = await websockets.connect(
                 self.ws_url,
@@ -80,10 +87,11 @@ class DerivConnector:
             if not auth_response or "error" in auth_response:
                 error_msg = auth_response.get("error", {}).get("message", "Unknown error") if auth_response else "No response"
                 logger.error(f"Authorization failed: {error_msg}")
+                await self.close()
                 return False
 
             self.active = True
-            self.authorized = True  # Marcar autorización como exitosa
+            self.authorized = True
             self.reconnect_attempts = 0
             self.consecutive_failures = 0
             self.last_message_time = asyncio.get_event_loop().time()
@@ -98,6 +106,12 @@ class DerivConnector:
 
         except Exception as e:
             logger.error(f"Failed to connect to Deriv API: {str(e)}")
+            if self.websocket:
+                try:
+                    await self.websocket.close()
+                except:
+                    pass
+                self.websocket = None
             return False
 
     async def close(self):
@@ -111,7 +125,7 @@ class DerivConnector:
                 logger.error(f"Error closing connection: {str(e)}")
             finally:
                 self.websocket = None
-                self.authorized = False  # Resetear estado de autorización
+                self.authorized = False
 
     async def _authorize(self):
         """Enhanced API authorization with balance check and account type detection"""
@@ -120,6 +134,10 @@ class DerivConnector:
 
         for attempt in range(max_retries):
             try:
+                if not self.websocket or self.websocket.closed:
+                    logger.error("Cannot authorize: WebSocket connection not established")
+                    return None
+
                 auth_req = {
                     "authorize": self.api_token,
                     "req_id": self._get_request_id()
@@ -129,22 +147,25 @@ class DerivConnector:
                 if response and "authorize" in response:
                     self.authorized = True
                     account_info = response["authorize"]
-                    
-                    # Detectar tipo de cuenta y saldo
+
+                    # Detect account type and balance
                     self.is_virtual = account_info.get("is_virtual", False)
                     self.balance = float(account_info.get("balance", 0))
                     self.currency = account_info.get("currency", "USD")
-                    
+
                     env_type = "DEMO" if self.is_virtual else "REAL"
                     logger.info(f"API authorization successful - {env_type} account")
                     logger.info(f"Account balance: {self.balance} {self.currency}")
-                    
-                    # Verificar saldo mínimo para cuenta virtual
+
+                    # Check minimum balance for virtual account
                     if self.is_virtual and self.balance < 1000:
                         logger.warning("Demo account balance low, initiating reset")
                         await self.reset_virtual_balance()
-                    
+
                     return response
+
+                if "error" in response:
+                    logger.error(f"Authorization error: {response['error'].get('message', 'Unknown error')}")
 
                 await asyncio.sleep(2)
             except Exception as e:
@@ -165,52 +186,20 @@ class DerivConnector:
                 "reset_balance": 1,
                 "req_id": self._get_request_id()
             }
-            
+
             response = await self.send_request(reset_req)
             if response and "reset_balance" in response:
                 new_balance = float(response["reset_balance"].get("balance", 0))
                 logger.info(f"Demo account balance reset to {new_balance} {self.currency}")
                 self.balance = new_balance
                 return True
-            
+
             logger.error("Failed to reset demo account balance")
             return False
 
         except Exception as e:
             logger.error(f"Error resetting demo balance: {str(e)}")
             return False
-
-        auth_req = {
-            "authorize": self.api_token,
-            "req_id": self._get_request_id(),
-            "passthrough": {"handle_errors": 1}
-        }
-
-        # Intentar autorización con reintentos
-        for attempt in range(3):  # 3 intentos de autorización
-            try:
-                response = await self.send_request(auth_req)
-                if response and "authorize" in response:
-                    logger.info("API authorization successful")
-                    return response
-                elif response and "error" in response:
-                    error_code = response["error"]["code"]
-                    error_msg = response["error"]["message"]
-                    logger.error(f"Authorization error {error_code}: {error_msg}")
-                    # Si es un error de token inválido, no tiene sentido reintentar
-                    if error_code in ["InvalidToken", "AuthorizationRequired"]:
-                        return response
-                else:
-                    logger.warning(f"Unexpected authorization response: {response}")
-
-                if attempt < 2:  # No esperar después del último intento
-                    await asyncio.sleep(2)  # Pequeña pausa entre intentos
-            except Exception as e:
-                logger.error(f"Authorization attempt {attempt+1} failed: {str(e)}")
-                if attempt < 2:
-                    await asyncio.sleep(2)
-
-        return None  # Todos los intentos fallaron
 
     def _get_request_id(self):
         """Generate unique request ID"""
@@ -221,9 +210,9 @@ class DerivConnector:
         """Keep the WebSocket connection alive with periodic pings"""
         while self.active:
             try:
-                await asyncio.sleep(5)  # Reducido a 5 segundos para detección más rápida
+                await asyncio.sleep(5)
 
-                # Verificar estado de conexión
+                # Check connection state
                 if not self.websocket or self.websocket.closed:
                     logger.warning("WebSocket closed, attempting immediate reconnect...")
                     if await self.reconnect():
@@ -231,62 +220,41 @@ class DerivConnector:
                     await asyncio.sleep(1)
                     continue
 
-                # Enviar ping y verificar respuesta
+                # Send ping to verify connection
                 try:
-                    ping_response = await asyncio.wait_for(
-                        self.send_request({"ping": 1}),
-                        timeout=10
-                    )
-                    if ping_response and ("pong" in ping_response or "ping" in ping_response):
-                        self.last_message_time = asyncio.get_event_loop().time()
-                        self.consecutive_failures = 0
-                        continue
-                except Exception as e:
-                    logger.warning(f"Ping failed: {str(e)}")
-                    await self.reconnect()
+                    ping_req = {
+                        "ping": 1,
+                        "req_id": self._get_request_id()
+                    }
 
-                # Check if we've received any messages recently
-                current_time = asyncio.get_event_loop().time()
-                if self.last_message_time and current_time - self.last_message_time > 30:  # Reducido a 30 segundos para detectar desconexiones más rápido
-                    logger.warning("No messages received in the last minute, reconnecting...")
-                    await self.reconnect()
-                    continue
-
-                ping_req = {
-                    "ping": 1,
-                    "req_id": self._get_request_id()
-                }
-
-                try:
-                    # Usar un timeout más largo para el ping
                     response = await asyncio.wait_for(
                         self.send_request(ping_req),
-                        timeout=15  # Aumentado a 15 segundos
+                        timeout=15
                     )
 
-                    # Mejorado el manejo de respuestas ping
                     if response:
-                        if "ping" in response and response.get("msg_type") == "ping":
+                        if "pong" in response:
                             self.last_ping_time = asyncio.get_event_loop().time()
+                            self.last_message_time = self.last_ping_time
                             self.consecutive_failures = 0
                             logger.debug("Ping successful")
                             continue
                         elif any(key in response for key in ["tick", "ohlc", "candles"]):
+                            # Also accept data response as valid connection indicator
                             self.last_ping_time = asyncio.get_event_loop().time()
+                            self.last_message_time = self.last_ping_time
                             self.consecutive_failures = 0
                             continue
                         else:
                             logger.warning(f"Unexpected ping response: {response}")
                             self.consecutive_failures += 1
-                            if self.consecutive_failures >= 5:  # Aumentado de 3 a 5
-                                logger.warning("Multiple consecutive ping failures, reconnecting...")
-                                await self.reconnect()
                     else:
                         logger.warning("Empty ping response")
                         self.consecutive_failures += 1
-                        if self.consecutive_failures >= 3:
-                            logger.warning("Multiple empty responses, reconnecting...")
-                            await self.reconnect()
+
+                    if self.consecutive_failures >= 3:
+                        logger.warning("Multiple ping failures, reconnecting...")
+                        await self.reconnect()
 
                 except asyncio.TimeoutError:
                     logger.warning("Ping timed out after 15 seconds")
@@ -294,9 +262,22 @@ class DerivConnector:
                     if self.consecutive_failures >= 2:
                         logger.warning("Multiple ping timeouts, reconnecting...")
                         await self.reconnect()
+                except Exception as e:
+                    logger.warning(f"Ping failed: {str(e)}")
+                    self.consecutive_failures += 1
+                    if self.consecutive_failures >= 2:
+                        await self.reconnect()
+
+                # Check if we've received any messages recently
+                current_time = asyncio.get_event_loop().time()
+                if self.last_message_time and current_time - self.last_message_time > 30:
+                    logger.warning("No messages received in the last 30 seconds, reconnecting...")
+                    await self.reconnect()
+                    continue
 
             except Exception as e:
                 logger.warning(f"Ping process failed: {str(e)}")
+                await asyncio.sleep(10)
                 await self.reconnect()
 
     async def check_connection(self):
@@ -315,26 +296,9 @@ class DerivConnector:
                 current_time = asyncio.get_event_loop().time()
                 if current_time - self.last_ping_time > 90:
                     return False
-                return True  # Si tenemos ping reciente, la conexión está activa
+                return True  # If we have recent ping, connection is active
 
-            # Si no hay último ping, hacer uno nuevo
-            ping_req = {
-                "ping": 1,
-                "req_id": self._get_request_id()
-            }
-
-            response = await asyncio.wait_for(
-                self.send_request(ping_req),
-                timeout=5
-            )
-
-            if response and "pong" in response:
-                self.last_ping_time = asyncio.get_event_loop().time()
-                return True
-
-            return False
-
-            # Send test ping
+            # If no last ping, send a new one
             ping_req = {
                 "ping": 1,
                 "req_id": self._get_request_id()
@@ -343,24 +307,14 @@ class DerivConnector:
             try:
                 response = await asyncio.wait_for(
                     self.send_request(ping_req),
-                    timeout=10  # Aumentado de 5 a 10 segundos
+                    timeout=5
                 )
 
-                # Mejorado el manejo de respuestas ping (similar a _keep_alive)
-                if response:
-                    if "ping" in response and response.get("msg_type") == "ping":
-                        self.last_ping_time = asyncio.get_event_loop().time()
-                        return True
-                    elif any(key in response for key in ["tick", "ohlc", "candles"]):
-                        # Recibimos datos de trading en lugar de pong, esto es válido
-                        self.last_ping_time = asyncio.get_event_loop().time()
-                        return True
-
-                logger.warning("Connection check failed: Invalid ping response")
+                if response and ("pong" in response or "ping" in response):
+                    self.last_ping_time = asyncio.get_event_loop().time()
+                    return True
                 return False
-
-            except asyncio.TimeoutError:
-                logger.warning("Connection check ping timed out")
+            except (asyncio.TimeoutError, Exception):
                 return False
 
         except Exception as e:
@@ -397,11 +351,6 @@ class DerivConnector:
             self.last_message_time = None
             self.last_ping_time = None
 
-            # Reset connection state
-            self.websocket = None
-            self.authorized = False
-            self.consecutive_failures = 0
-
             success = await self.connect()
             if success:
                 logger.info(f"Reconnection successful after {self.reconnect_attempts + 1} attempts")
@@ -422,13 +371,24 @@ class DerivConnector:
     async def send_request(self, request):
         """Send request to Deriv API with mutex lock"""
         if not self.websocket:
-            raise ConnectionError("WebSocket connection not established")
+            logger.error("WebSocket connection not established")
+            return None
 
         async with self.lock:  # Ensure only one request at a time
             try:
-                # Añadimos un reintento básico para envío de mensajes
-                for attempt in range(3):  # 3 intentos como máximo
+                # Add basic retry for message sending
+                for attempt in range(3):  # 3 attempts maximum
                     try:
+                        if self.websocket.closed:
+                            logger.warning(f"WebSocket closed before sending request (attempt {attempt+1})")
+                            if attempt < 2:
+                                if attempt == 0:  # Only try to reconnect on first failure
+                                    await self.reconnect()
+                                await asyncio.sleep(1)
+                                continue
+                            else:
+                                return None
+
                         await self.websocket.send(json.dumps(request))
                         response = await self.websocket.recv()
                         parsed_response = json.loads(response)
@@ -444,7 +404,7 @@ class DerivConnector:
                             # Check for authentication errors
                             if error_code in ["InvalidToken", "AuthorizationRequired"]:
                                 logger.error(f"Authentication error: {error_message}")
-                                self.authorized = False  # Marcar como no autorizado
+                                self.authorized = False  # Mark as unauthorized
                                 # Force reconnect with fresh auth
                                 await self.reconnect()
                             else:
@@ -453,18 +413,28 @@ class DerivConnector:
                         return parsed_response
 
                     except websockets.exceptions.ConnectionClosed:
-                        if attempt < 2:  # No log en el último intento
+                        if attempt < 2:
                             logger.warning(f"Connection closed while sending request. Attempt {attempt+1}/3")
-                            # Intentar reconectar antes de reintentar
-                            if attempt == 0:  # Solo intentar reconectar en el primer fallo
+                            # Try to reconnect before retrying
+                            if attempt == 0:  # Only try to reconnect on first failure
                                 await self.reconnect()
-                            await asyncio.sleep(1)  # Breve pausa
+                            await asyncio.sleep(1)  # Brief pause
                         else:
-                            raise  # Re-raise en el último intento
+                            logger.error("Connection permanently closed after 3 attempts")
+                            return None
+
+                    except Exception as e:
+                        logger.error(f"Error sending request (attempt {attempt+1}): {str(e)}")
+                        if attempt < 2:
+                            await asyncio.sleep(1)
+                        else:
+                            return None
+
+                return None  # All attempts failed
 
             except Exception as e:
-                logger.error(f"Error sending request: {str(e)}")
-                raise
+                logger.error(f"Fatal error sending request: {str(e)}")
+                return None
 
     async def subscribe_to_ticks(self, symbol):
         """Subscribe to price ticks for a symbol"""
