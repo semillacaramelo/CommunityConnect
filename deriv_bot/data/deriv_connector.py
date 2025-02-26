@@ -26,11 +26,12 @@ class DerivConnector:
         self.last_ping_time = None
         self.ping_interval = 30
         self.reconnect_attempts = 0
-        self.max_reconnect_attempts = 10
+        self.max_reconnect_attempts = 15  # Aumentado para permitir más intentos
         self.reconnect_delay = 5
-        self.max_reconnect_delay = 60
+        self.max_reconnect_delay = 120  # Aumentado el tiempo máximo de espera
         self.consecutive_failures = 0
         self.last_message_time = None
+        self.authorized = False  # Nuevo flag para rastrear si la autorización fue exitosa
 
         # Log the environment we're connecting to
         env_mode = "REAL" if not self.config.is_demo() else "DEMO"
@@ -44,7 +45,7 @@ class DerivConnector:
                 self.ws_url,
                 ping_interval=None,  # We'll handle pings manually
                 ping_timeout=None,   # Disable auto ping timeout
-                close_timeout=10,    # Give more time for graceful close
+                close_timeout=15,    # Aumentado para dar más tiempo
                 max_size=10 * 1024 * 1024  # 10MB max message size
             )
 
@@ -56,6 +57,7 @@ class DerivConnector:
                 return False
 
             self.active = True
+            self.authorized = True  # Marcar autorización como exitosa
             self.reconnect_attempts = 0
             self.consecutive_failures = 0
             self.last_message_time = asyncio.get_event_loop().time()
@@ -83,6 +85,7 @@ class DerivConnector:
                 logger.error(f"Error closing connection: {str(e)}")
             finally:
                 self.websocket = None
+                self.authorized = False  # Resetear estado de autorización
 
     async def _authorize(self):
         """Authorize connection using API token"""
@@ -93,7 +96,32 @@ class DerivConnector:
             "authorize": self.api_token,
             "req_id": self._get_request_id()
         }
-        return await self.send_request(auth_req)
+
+        # Intentar autorización con reintentos
+        for attempt in range(3):  # 3 intentos de autorización
+            try:
+                response = await self.send_request(auth_req)
+                if response and "authorize" in response:
+                    logger.info("API authorization successful")
+                    return response
+                elif response and "error" in response:
+                    error_code = response["error"]["code"]
+                    error_msg = response["error"]["message"]
+                    logger.error(f"Authorization error {error_code}: {error_msg}")
+                    # Si es un error de token inválido, no tiene sentido reintentar
+                    if error_code in ["InvalidToken", "AuthorizationRequired"]:
+                        return response
+                else:
+                    logger.warning(f"Unexpected authorization response: {response}")
+
+                if attempt < 2:  # No esperar después del último intento
+                    await asyncio.sleep(2)  # Pequeña pausa entre intentos
+            except Exception as e:
+                logger.error(f"Authorization attempt {attempt+1} failed: {str(e)}")
+                if attempt < 2:
+                    await asyncio.sleep(2)
+
+        return None  # Todos los intentos fallaron
 
     def _get_request_id(self):
         """Generate unique request ID"""
@@ -125,27 +153,45 @@ class DerivConnector:
                 }
 
                 try:
+                    # Usar un timeout más largo para el ping
                     response = await asyncio.wait_for(
                         self.send_request(ping_req),
-                        timeout=10  # 10 second timeout for ping response
+                        timeout=15  # Aumentado a 15 segundos
                     )
 
-                    if response and "pong" in response:
-                        self.last_ping_time = asyncio.get_event_loop().time()
-                        self.consecutive_failures = 0
-                        logger.debug("Ping successful")
+                    # Mejorado el manejo de respuestas ping
+                    if response:
+                        if "pong" in response:
+                            self.last_ping_time = asyncio.get_event_loop().time()
+                            self.consecutive_failures = 0
+                            logger.debug("Ping successful")
+                        else:
+                            # Verificar si hay algún otro tipo de respuesta válida
+                            if any(key in response for key in ["tick", "ohlc", "candles"]):
+                                # Recibimos datos de trading en lugar de pong, esto es válido
+                                self.last_ping_time = asyncio.get_event_loop().time()
+                                self.consecutive_failures = 0
+                                logger.debug("Received trading data instead of pong - connection still active")
+                            else:
+                                logger.warning(f"Unexpected ping response: {response}")
+                                self.consecutive_failures += 1
+                                if self.consecutive_failures >= 5:  # Aumentado de 3 a 5
+                                    logger.warning("Multiple consecutive ping failures, reconnecting...")
+                                    await self.reconnect()
                     else:
-                        logger.warning("Invalid ping response")
+                        logger.warning("Empty ping response")
                         self.consecutive_failures += 1
                         if self.consecutive_failures >= 3:
-                            logger.warning("Multiple consecutive ping failures, reconnecting...")
+                            logger.warning("Multiple empty responses, reconnecting...")
                             await self.reconnect()
+
                 except asyncio.TimeoutError:
-                    logger.warning("Ping timed out after 10 seconds")
+                    logger.warning("Ping timed out after 15 seconds")
                     self.consecutive_failures += 1
                     if self.consecutive_failures >= 2:
                         logger.warning("Multiple ping timeouts, reconnecting...")
                         await self.reconnect()
+
             except Exception as e:
                 logger.warning(f"Ping process failed: {str(e)}")
                 await self.reconnect()
@@ -158,10 +204,15 @@ class DerivConnector:
                 logger.warning("Connection check failed: WebSocket not active")
                 return False
 
+            # Si no estamos autorizados, la conexión no sirve
+            if not self.authorized:
+                logger.warning("Connection check failed: Not authorized")
+                return False
+
             # Check last successful ping time
             if self.last_ping_time:
                 current_time = asyncio.get_event_loop().time()
-                if current_time - self.last_ping_time > 60:  # No successful ping in last minute
+                if current_time - self.last_ping_time > 90:  # Aumentado de 60 a 90 segundos
                     logger.warning("Connection check failed: No recent ping response")
                     return False
 
@@ -174,15 +225,22 @@ class DerivConnector:
             try:
                 response = await asyncio.wait_for(
                     self.send_request(ping_req),
-                    timeout=5  # 5 second timeout for check ping
+                    timeout=10  # Aumentado de 5 a 10 segundos
                 )
 
-                if response and "pong" in response:
-                    self.last_ping_time = asyncio.get_event_loop().time()
-                    return True
+                # Mejorado el manejo de respuestas ping (similar a _keep_alive)
+                if response:
+                    if "pong" in response:
+                        self.last_ping_time = asyncio.get_event_loop().time()
+                        return True
+                    elif any(key in response for key in ["tick", "ohlc", "candles"]):
+                        # Recibimos datos de trading en lugar de pong, esto es válido
+                        self.last_ping_time = asyncio.get_event_loop().time()
+                        return True
 
                 logger.warning("Connection check failed: Invalid ping response")
                 return False
+
             except asyncio.TimeoutError:
                 logger.warning("Connection check ping timed out")
                 return False
@@ -200,16 +258,17 @@ class DerivConnector:
         try:
             await self.close()
 
-            # Calculate backoff time with jitter
-            delay = min(self.reconnect_delay * (2 ** self.reconnect_attempts), self.max_reconnect_delay)
+            # Backoff exponencial con jitter mejorado
+            delay = min(self.reconnect_delay * (1.5 ** self.reconnect_attempts), self.max_reconnect_delay)
             jitter = random.uniform(0.8, 1.2)  # Add 20% jitter
             wait_time = delay * jitter
 
-            logger.info(f"Waiting {wait_time:.2f}s before reconnect attempt {self.reconnect_attempts + 1}")
+            logger.info(f"Waiting {wait_time:.2f}s before reconnect attempt {self.reconnect_attempts + 1}/{self.max_reconnect_attempts}")
             await asyncio.sleep(wait_time)
 
             success = await self.connect()
             if success:
+                logger.info(f"Reconnection successful after {self.reconnect_attempts + 1} attempts")
                 self.reconnect_attempts = 0
                 return True
             else:
@@ -218,6 +277,7 @@ class DerivConnector:
                     logger.error(f"Maximum reconnection attempts ({self.max_reconnect_attempts}) reached")
                     self.active = False
                 return False
+
         except Exception as e:
             logger.error(f"Reconnection failed: {str(e)}")
             self.reconnect_attempts += 1
@@ -230,27 +290,42 @@ class DerivConnector:
 
         async with self.lock:  # Ensure only one request at a time
             try:
-                await self.websocket.send(json.dumps(request))
-                response = await self.websocket.recv()
-                parsed_response = json.loads(response)
+                # Añadimos un reintento básico para envío de mensajes
+                for attempt in range(3):  # 3 intentos como máximo
+                    try:
+                        await self.websocket.send(json.dumps(request))
+                        response = await self.websocket.recv()
+                        parsed_response = json.loads(response)
 
-                # Update last message time
-                self.last_message_time = asyncio.get_event_loop().time()
+                        # Update last message time
+                        self.last_message_time = asyncio.get_event_loop().time()
 
-                # Check for API errors
-                if "error" in parsed_response:
-                    error_code = parsed_response["error"]["code"]
-                    error_message = parsed_response["error"]["message"]
+                        # Check for API errors
+                        if "error" in parsed_response:
+                            error_code = parsed_response["error"]["code"]
+                            error_message = parsed_response["error"]["message"]
 
-                    # Check for authentication errors
-                    if error_code in ["InvalidToken", "AuthorizationRequired"]:
-                        logger.error(f"Authentication error: {error_message}")
-                        # Force reconnect with fresh auth
-                        await self.reconnect()
-                    else:
-                        logger.warning(f"API error {error_code}: {error_message}")
+                            # Check for authentication errors
+                            if error_code in ["InvalidToken", "AuthorizationRequired"]:
+                                logger.error(f"Authentication error: {error_message}")
+                                self.authorized = False  # Marcar como no autorizado
+                                # Force reconnect with fresh auth
+                                await self.reconnect()
+                            else:
+                                logger.warning(f"API error {error_code}: {error_message}")
 
-                return parsed_response
+                        return parsed_response
+
+                    except websockets.exceptions.ConnectionClosed:
+                        if attempt < 2:  # No log en el último intento
+                            logger.warning(f"Connection closed while sending request. Attempt {attempt+1}/3")
+                            # Intentar reconectar antes de reintentar
+                            if attempt == 0:  # Solo intentar reconectar en el primer fallo
+                                await self.reconnect()
+                            await asyncio.sleep(1)  # Breve pausa
+                        else:
+                            raise  # Re-raise en el último intento
+
             except Exception as e:
                 logger.error(f"Error sending request: {str(e)}")
                 raise
@@ -272,3 +347,11 @@ class DerivConnector:
             "req_id": self._get_request_id()
         }
         return await self.send_request(active_symbols_req)
+
+    async def get_server_time(self):
+        """Get server time to check connectivity"""
+        time_req = {
+            "time": 1,
+            "req_id": self._get_request_id()
+        }
+        return await self.send_request(time_req)
