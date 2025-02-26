@@ -10,10 +10,10 @@ class RiskManager:
         self.is_demo = is_demo
         # Demo account uses more aggressive parameters
         if is_demo:
-            self.max_position_size = max_position_size * 2  # Double the position size for demo
-            self.max_daily_loss = max_daily_loss * 3  # Triple the daily loss limit for demo
-            self.stop_loss_pct = 0.05  # 5% stop loss for demo
-            self.risk_multiplier = 2.0  # More aggressive risk profile
+            self.max_position_size = max_position_size * 4  # Quadruple the position size for demo
+            self.max_daily_loss = max_daily_loss * 5  # 5x the daily loss limit for demo
+            self.stop_loss_pct = 0.08  # 8% stop loss for demo
+            self.risk_multiplier = 3.0  # More aggressive risk profile
         else:
             self.max_position_size = max_position_size
             self.max_daily_loss = max_daily_loss

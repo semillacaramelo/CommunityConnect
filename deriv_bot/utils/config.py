@@ -17,7 +17,7 @@ class Config:
         self.trading_config = {
             'symbol': os.getenv('DEFAULT_SYMBOL', 'frxEURUSD'),
             'stake_amount': float(os.getenv('DEFAULT_STAKE_AMOUNT', '10.0')),
-            'duration': int(os.getenv('DEFAULT_DURATION', '60')),  # seconds
+            'duration': int(os.getenv('DEFAULT_DURATION', '30')),  # seconds - más rápido para demo
             'max_position_size': float(os.getenv('MAX_POSITION_SIZE', '100.0')),
             'max_daily_loss': float(os.getenv('MAX_DAILY_LOSS', '50.0'))
         }
