@@ -123,6 +123,8 @@ The setup script creates the necessary VS Code configuration files in the `.vsco
 - **launch.json** - Configurations for running different aspects of the bot
 - **settings.json** - Python-specific settings and path configurations
 
+For detailed VS Code-specific setup instructions, refer to [VSCODE_SETUP_EN.md](VSCODE_SETUP_EN.md).
+
 ## Running the Bot
 
 ### Verify API Connection

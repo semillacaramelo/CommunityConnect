@@ -22,6 +22,8 @@ The setup guide covers:
 - Running and debugging the bot
 - Troubleshooting common issues
 
+For VS Code specific setup instructions, see [VS Code Setup Guide](VSCODE_SETUP_EN.md).
+
 ### Quick Start
 ```bash
 # Clone the repository
