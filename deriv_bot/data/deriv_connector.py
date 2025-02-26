@@ -5,6 +5,8 @@ Based on official Deriv API documentation
 import os
 import json
 import asyncio
+import random
+import time
 import websockets
 from deriv_bot.monitor.logger import setup_logger
 from deriv_bot.utils.config import Config
@@ -22,6 +24,13 @@ class DerivConnector:
         self.lock = asyncio.Lock()
         self.request_id = 0
         self.last_ping_time = None
+        self.ping_interval = 30
+        self.reconnect_attempts = 0
+        self.max_reconnect_attempts = 10
+        self.reconnect_delay = 5
+        self.max_reconnect_delay = 60
+        self.consecutive_failures = 0
+        self.last_message_time = None
 
         # Log the environment we're connecting to
         env_mode = "REAL" if not self.config.is_demo() else "DEMO"
@@ -30,7 +39,14 @@ class DerivConnector:
     async def connect(self):
         """Establish WebSocket connection to Deriv API"""
         try:
-            self.websocket = await websockets.connect(self.ws_url)
+            logger.debug(f"Connecting to {self.ws_url}")
+            self.websocket = await websockets.connect(
+                self.ws_url,
+                ping_interval=None,  # We'll handle pings manually
+                ping_timeout=None,   # Disable auto ping timeout
+                close_timeout=10,    # Give more time for graceful close
+                max_size=10 * 1024 * 1024  # 10MB max message size
+            )
 
             # Authorize connection
             auth_response = await self._authorize()
@@ -40,6 +56,9 @@ class DerivConnector:
                 return False
 
             self.active = True
+            self.reconnect_attempts = 0
+            self.consecutive_failures = 0
+            self.last_message_time = asyncio.get_event_loop().time()
 
             # Log environment clearly
             env_mode = "REAL" if not self.config.is_demo() else "DEMO"
@@ -62,6 +81,8 @@ class DerivConnector:
                 logger.info("Connection closed")
             except Exception as e:
                 logger.error(f"Error closing connection: {str(e)}")
+            finally:
+                self.websocket = None
 
     async def _authorize(self):
         """Authorize connection using API token"""
@@ -83,21 +104,50 @@ class DerivConnector:
         """Keep the WebSocket connection alive with periodic pings"""
         while self.active:
             try:
-                await asyncio.sleep(30)  # Wait between pings
-                if self.websocket and not self.websocket.closed:
-                    ping_req = {
-                        "ping": 1,
-                        "req_id": self._get_request_id()
-                    }
-                    response = await self.send_request(ping_req)
+                await asyncio.sleep(self.ping_interval)  # Wait between pings
+
+                # If socket is already closed, attempt reconnect
+                if not self.websocket or self.websocket.closed:
+                    logger.warning("WebSocket closed before ping, attempting reconnect...")
+                    await self.reconnect()
+                    continue
+
+                # Check if we've received any messages recently
+                current_time = asyncio.get_event_loop().time()
+                if self.last_message_time and current_time - self.last_message_time > 60:
+                    logger.warning("No messages received in the last minute, reconnecting...")
+                    await self.reconnect()
+                    continue
+
+                ping_req = {
+                    "ping": 1,
+                    "req_id": self._get_request_id()
+                }
+
+                try:
+                    response = await asyncio.wait_for(
+                        self.send_request(ping_req),
+                        timeout=10  # 10 second timeout for ping response
+                    )
+
                     if response and "pong" in response:
                         self.last_ping_time = asyncio.get_event_loop().time()
+                        self.consecutive_failures = 0
                         logger.debug("Ping successful")
                     else:
                         logger.warning("Invalid ping response")
+                        self.consecutive_failures += 1
+                        if self.consecutive_failures >= 3:
+                            logger.warning("Multiple consecutive ping failures, reconnecting...")
+                            await self.reconnect()
+                except asyncio.TimeoutError:
+                    logger.warning("Ping timed out after 10 seconds")
+                    self.consecutive_failures += 1
+                    if self.consecutive_failures >= 2:
+                        logger.warning("Multiple ping timeouts, reconnecting...")
                         await self.reconnect()
             except Exception as e:
-                logger.warning(f"Ping failed: {str(e)}")
+                logger.warning(f"Ping process failed: {str(e)}")
                 await self.reconnect()
 
     async def check_connection(self):
@@ -120,14 +170,22 @@ class DerivConnector:
                 "ping": 1,
                 "req_id": self._get_request_id()
             }
-            response = await self.send_request(ping_req)
 
-            if response and "pong" in response:
-                self.last_ping_time = asyncio.get_event_loop().time()
-                return True
+            try:
+                response = await asyncio.wait_for(
+                    self.send_request(ping_req),
+                    timeout=5  # 5 second timeout for check ping
+                )
 
-            logger.warning("Connection check failed: Invalid ping response")
-            return False
+                if response and "pong" in response:
+                    self.last_ping_time = asyncio.get_event_loop().time()
+                    return True
+
+                logger.warning("Connection check failed: Invalid ping response")
+                return False
+            except asyncio.TimeoutError:
+                logger.warning("Connection check ping timed out")
+                return False
 
         except Exception as e:
             logger.error(f"Error checking connection: {str(e)}")
@@ -135,12 +193,35 @@ class DerivConnector:
 
     async def reconnect(self):
         """Attempt to reconnect if connection is lost"""
+        if not self.active:
+            logger.debug("Not reconnecting as connector is marked inactive")
+            return False
+
         try:
             await self.close()
-            await asyncio.sleep(5)  # Wait before reconnecting
-            await self.connect()
+
+            # Calculate backoff time with jitter
+            delay = min(self.reconnect_delay * (2 ** self.reconnect_attempts), self.max_reconnect_delay)
+            jitter = random.uniform(0.8, 1.2)  # Add 20% jitter
+            wait_time = delay * jitter
+
+            logger.info(f"Waiting {wait_time:.2f}s before reconnect attempt {self.reconnect_attempts + 1}")
+            await asyncio.sleep(wait_time)
+
+            success = await self.connect()
+            if success:
+                self.reconnect_attempts = 0
+                return True
+            else:
+                self.reconnect_attempts += 1
+                if self.reconnect_attempts >= self.max_reconnect_attempts:
+                    logger.error(f"Maximum reconnection attempts ({self.max_reconnect_attempts}) reached")
+                    self.active = False
+                return False
         except Exception as e:
             logger.error(f"Reconnection failed: {str(e)}")
+            self.reconnect_attempts += 1
+            return False
 
     async def send_request(self, request):
         """Send request to Deriv API with mutex lock"""
@@ -151,7 +232,25 @@ class DerivConnector:
             try:
                 await self.websocket.send(json.dumps(request))
                 response = await self.websocket.recv()
-                return json.loads(response)
+                parsed_response = json.loads(response)
+
+                # Update last message time
+                self.last_message_time = asyncio.get_event_loop().time()
+
+                # Check for API errors
+                if "error" in parsed_response:
+                    error_code = parsed_response["error"]["code"]
+                    error_message = parsed_response["error"]["message"]
+
+                    # Check for authentication errors
+                    if error_code in ["InvalidToken", "AuthorizationRequired"]:
+                        logger.error(f"Authentication error: {error_message}")
+                        # Force reconnect with fresh auth
+                        await self.reconnect()
+                    else:
+                        logger.warning(f"API error {error_code}: {error_message}")
+
+                return parsed_response
             except Exception as e:
                 logger.error(f"Error sending request: {str(e)}")
                 raise
