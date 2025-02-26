@@ -1,0 +1,2 @@
+symbol,type,amount,entry_price,exit_price,predicted_change,actual_change,confidence,timestamp,profit,running_balance,drawdown,prediction_error,prediction_direction_correct,cumulative_profit,drawdown_pct,rolling_win_rate,rolling_avg_profit
+frxEURUSD,PUT,20.0,1.04846,1.04826,-0.004767347,-0.0001907559658928123,0.7139591723680496,2025-02-26T13:57:06.880656,0.0039999999999995595,0.0039999999999995595,0.0,0.00457659116130636,True,0.0039999999999995595,0.0,,
