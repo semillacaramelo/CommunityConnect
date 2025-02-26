@@ -118,22 +118,27 @@ class Config:
         return token
 
     def set_environment(self, env_mode):
-        """Enhanced environment configuration with validation"""
+        """Set trading environment (demo/real) with validation"""
         env_mode = env_mode.lower()
         if env_mode not in ['demo', 'real']:
             logger.error(f"Invalid environment mode: {env_mode}")
             return False
 
+        # Validate required tokens
+        token = os.getenv(f'DERIV_API_TOKEN_{env_mode.upper()}')
+        if not token:
+            logger.error(f"Missing API token for {env_mode} environment")
+            return False
+
+        # Additional validation for real mode
         if env_mode == 'real':
-            if not os.getenv('DERIV_API_TOKEN_REAL'):
-                logger.error("Real mode requires DERIV_API_TOKEN_REAL")
-                return False
-            if os.getenv('DERIV_REAL_MODE_CONFIRMED', '').lower() != 'yes':
-                logger.error("Real mode not confirmed. Set DERIV_REAL_MODE_CONFIRMED=yes")
+            confirm = os.getenv('DERIV_REAL_MODE_CONFIRMED', 'no').lower() == 'yes'
+            if not confirm:
+                logger.error("Real mode not confirmed in environment settings")
                 return False
 
         self.environment = env_mode
-        logger.info(f"Environment set to {env_mode.upper()}")
+        logger.info(f"Environment set to {env_mode.upper()} mode")
         return True
 
     def get_environment(self):

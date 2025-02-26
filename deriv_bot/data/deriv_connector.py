@@ -162,13 +162,29 @@ class DerivConnector:
         """Keep the WebSocket connection alive with periodic pings"""
         while self.active:
             try:
-                await asyncio.sleep(self.ping_interval)  # Wait between pings
+                await asyncio.sleep(5)  # Reducido a 5 segundos para detección más rápida
 
-                # If socket is already closed, attempt reconnect
+                # Verificar estado de conexión
                 if not self.websocket or self.websocket.closed:
-                    logger.warning("WebSocket closed before ping, attempting reconnect...")
-                    await self.reconnect()
+                    logger.warning("WebSocket closed, attempting immediate reconnect...")
+                    if await self.reconnect():
+                        continue
+                    await asyncio.sleep(1)
                     continue
+
+                # Enviar ping y verificar respuesta
+                try:
+                    ping_response = await asyncio.wait_for(
+                        self.send_request({"ping": 1}),
+                        timeout=10
+                    )
+                    if ping_response and ("pong" in ping_response or "ping" in ping_response):
+                        self.last_message_time = asyncio.get_event_loop().time()
+                        self.consecutive_failures = 0
+                        continue
+                except Exception as e:
+                    logger.warning(f"Ping failed: {str(e)}")
+                    await self.reconnect()
 
                 # Check if we've received any messages recently
                 current_time = asyncio.get_event_loop().time()

@@ -104,10 +104,16 @@ class DataProcessor:
     def create_sequences(self, data, returns, sequence_length=30):
         """Create input sequences and target returns for LSTM model"""
         try:
-            # Ensure sequence_length is a valid integer
-            if sequence_length is None or not isinstance(sequence_length, int):
+            # Validate and adjust sequence length
+            if sequence_length is None or not isinstance(sequence_length, int) or sequence_length < 10:
                 sequence_length = 30
-                logger.warning(f"Invalid sequence length provided, defaulting to {sequence_length}")
+                logger.info(f"Using default sequence length of {sequence_length}")
+            
+            # Ensure minimum data requirement
+            min_required = sequence_length + 20  # Buffer for prediction
+            if len(data) < min_required:
+                logger.error(f"Insufficient data points ({len(data)}), minimum required: {min_required}")
+                return None, None
 
             # If data is a pandas DataFrame, convert to numpy array
             if isinstance(data, pd.DataFrame):

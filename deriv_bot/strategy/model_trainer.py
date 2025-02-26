@@ -142,9 +142,9 @@ class ModelTrainer:
             directory = os.path.dirname(model_path)
             if directory and not os.path.exists(directory):
                 os.makedirs(directory)
-            
+
             # Save model
-            self.model.save(model_path)
+            self.model.save(model_path, save_format='keras') #Updated save format
             logger.info(f"Model saved to {model_path}")
             return True
         except Exception as e:
