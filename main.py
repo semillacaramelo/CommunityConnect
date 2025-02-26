@@ -1,5 +1,27 @@
 """
-Main entry point for the Deriv ML Trading Bot
+Main Entry Point for Deriv ML Trading Bot
+
+Location: deriv_bot/main.py
+
+Purpose:
+Main orchestrator for the trading bot that coordinates all components including
+data fetching, model training, trading execution and monitoring.
+
+Dependencies:
+- deriv_bot.data: API connection and data handling
+- deriv_bot.strategy: ML models and prediction
+- deriv_bot.risk: Risk management
+- deriv_bot.execution: Trade execution
+- deriv_bot.monitor: Logging and performance tracking
+- deriv_bot.utils: Configuration and utilities
+
+Interactions:
+- Input: Command line arguments, API data streams
+- Output: Trading actions, logs, performance metrics
+- Relations: Coordinates all other modules
+
+Author: Trading Bot Team
+Last modified: 2024-02-26
 """
 import asyncio
 import os

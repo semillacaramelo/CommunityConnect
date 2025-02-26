@@ -1,6 +1,24 @@
 """
-Module for fetching market data from Deriv API
-Based on official Deriv API documentation
+Market Data Fetcher Module
+
+Location: deriv_bot/data/data_fetcher.py
+
+Purpose:
+Retrieves and formats market data from Deriv API, handles data streaming,
+and provides historical data access.
+
+Dependencies:
+- pandas: Data manipulation and analysis
+- numpy: Numerical operations
+- deriv_bot.data.deriv_connector: API connection handling
+
+Interactions:
+- Input: API queries, market symbols
+- Output: Formatted market data (DataFrame)
+- Relations: Used by main trading loop and model training
+
+Author: Trading Bot Team
+Last modified: 2024-02-26
 """
 import pandas as pd
 import numpy as np

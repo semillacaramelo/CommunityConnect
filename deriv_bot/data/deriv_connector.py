@@ -1,6 +1,24 @@
 """
-Deriv API connector module for establishing and managing API connections
-Based on official Deriv API documentation
+Deriv API Connector Module
+
+Location: deriv_bot/data/deriv_connector.py
+
+Purpose:
+Handles WebSocket connections to Deriv.com API, manages authentication,
+and provides low-level API communication functionality.
+
+Dependencies:
+- websockets: WebSocket client implementation
+- deriv_bot.monitor.logger: Logging functionality
+- deriv_bot.utils.config: Configuration management
+
+Interactions:
+- Input: API credentials, connection parameters
+- Output: WebSocket connection, API responses
+- Relations: Used by DataFetcher and OrderExecutor
+
+Author: Trading Bot Team
+Last modified: 2024-02-26
 """
 import os
 import json

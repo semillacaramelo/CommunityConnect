@@ -1,5 +1,24 @@
 """
-Test para el módulo AssetSelector.
+Asset Selector Module Unit Tests
+
+Location: tests/test_asset_selector.py
+
+Purpose:
+Unit tests for the asset selection logic including market hours,
+asset availability, and selection strategies.
+
+Dependencies:
+- unittest: Testing framework
+- datetime: Time handling
+- deriv_bot.utils.asset_selector: Module being tested
+
+Interactions:
+- Input: Test market conditions and time data
+- Output: Asset selection validations
+- Relations: Validates asset selection functionality
+
+Author: Trading Bot Team
+Last modified: 2024-02-26
 """
 
 import unittest

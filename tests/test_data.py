@@ -1,5 +1,25 @@
 """
-Unit tests for data handling modules
+Data Module Unit Tests
+
+Location: tests/test_data.py
+
+Purpose:
+Unit tests for data processing and handling components, including
+technical indicators and data preparation for ML models.
+
+Dependencies:
+- unittest: Testing framework
+- pandas: Data manipulation
+- numpy: Numerical operations
+- deriv_bot.data: Modules being tested
+
+Interactions:
+- Input: Test data and configurations
+- Output: Test results and assertions
+- Relations: Validates data processing functionality
+
+Author: Trading Bot Team
+Last modified: 2024-02-26
 """
 import unittest
 import pandas as pd

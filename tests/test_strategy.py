@@ -1,5 +1,24 @@
 """
-Unit tests for strategy modules
+Strategy Module Unit Tests
+
+Location: tests/test_strategy.py
+
+Purpose:
+Unit tests for trading strategy components including model training,
+prediction, and feature engineering.
+
+Dependencies:
+- unittest: Testing framework
+- numpy: Numerical operations
+- deriv_bot.strategy: Strategy modules being tested
+
+Interactions:
+- Input: Test data and model configurations
+- Output: Test results and model validations
+- Relations: Validates ML model functionality
+
+Author: Trading Bot Team
+Last modified: 2024-02-26
 """
 import unittest
 import numpy as np
