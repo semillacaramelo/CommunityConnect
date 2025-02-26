@@ -1,0 +1,47 @@
+"Como desarrollador principal del bot de trading para Deriv.com, basado en el siguiente reporte de estado, necesito que implementes las correcciones necesarias para que el bot opere en entornos live (cuentas DEMO y REAL) sin errores. A continuación, se detallan los problemas identificados y las acciones requeridas:
+
+**Reporte de Estado:**
+
+- **Estado General:**  
+  - Bot de trading algorítmico en fase de desarrollo/pruebas con funcionalidad básica implementada.  
+  - Opera en modo DEMO por defecto, con protecciones para el modo REAL.
+
+- **Componentes Principales:**
+  - **Conector API (deriv_connector.py):** Funcional, pero presenta problemas de conexión (errores en test_api_connectivity.py, timeouts frecuentes en la reconexión).
+  - **Gestor de Modelos (model_manager.py):** Implementado y funcionando.
+  - **Gestor de Riesgos (risk_manager.py):** Configurado con perfiles DEMO/REAL.
+  - **Sistema de Monitoreo (logger.py, performance.py):** Operativo.
+
+- **Errores Diagnosticos:**
+  - Problemas de conexión: fallos y timeouts frecuentes.
+  - Errores en el manejo de datos históricos (ML): problemas de acceso a datos.
+  - Test fallidos: test_is_market_open_stocks en asset_selector.py y ejecución incompleta en test_trading_loop.py.
+
+**Recomendaciones del Reporte:**
+1. Priorizar la solución de problemas de conexión a la API.
+2. Mejorar el manejo de errores en data_fetcher.py.
+3. Revisar y corregir la lógica de market_open en asset_selector.py.
+
+**Acciones Requeridas:**
+
+1. **Corrección del Conector API (deriv_connector.py):**
+   - Revisa y corrige la implementación del conector para minimizar timeouts y asegurar una conexión estable a la API de Deriv.
+   - Asegúrate de que el mecanismo de reconexión automática funcione sin interrupciones y que se manejen adecuadamente los errores de conexión.
+
+2. **Mejora en el Manejo de Errores en data_fetcher.py:**
+   - Implementa validaciones robustas y mecanismos de reintento para obtener datos históricos y en tiempo real sin fallos.
+   - Añade manejo de excepciones detallado que registre errores y notifique cuando la fuente de datos no cumpla con los requisitos mínimos.
+
+3. **Revisión y Ajuste de la Lógica en asset_selector.py:**
+   - Corrige la función que determina si el mercado está abierto (test_is_market_open_stocks) para que funcione según lo esperado.
+   - Asegúrate de que la lógica de selección de activos refleje correctamente el estado del mercado en vivo.
+
+4. **Verificación de Tests y Operatividad Live:**
+   - Confirma que, tras los cambios, los tests (test_api_connectivity.py, test_asset_selector.py, test_trading_loop.py) se ejecuten correctamente y sin errores.
+   - Verifica que el bot se conecte y opere efectivamente en entornos live, utilizando las credenciales y configuraciones correctas para cuentas DEMO y REAL.
+
+5. **Actualización de la Documentación:**
+   - Actualiza los archivos `readme.md` y `documentation.md` para reflejar todos los cambios implementados.
+   - Asegúrate de incluir instrucciones claras sobre la configuración de las variables de entorno y la ejecución del bot en entornos live.
+
+Por favor, implementa estas mejoras de forma integral, conservando la estructura modular del proyecto y sin eliminar ninguna funcionalidad esencial. Una vez completadas las correcciones, entrega el código actualizado y un breve informe que detalle las modificaciones realizadas y cómo se verificó la operatividad del bot en entornos live."
