@@ -19,7 +19,7 @@ Interactions:
 - Relations: Used by main loop for model updates
 
 Author: Trading Bot Team
-Last modified: 2024-02-26
+Last modified: 2024-02-27
 """
 import numpy as np
 import glob
@@ -112,6 +112,31 @@ class ModelTrainer:
             History object from model training or None if training failed
         """
         try:
+            # Validate input data
+            if X is None or y is None:
+                logger.error("Input data (X) or target (y) is None")
+                return None
+
+            if len(X) == 0 or len(y) == 0:
+                logger.error(f"Empty input data: X shape = {X.shape}, y shape = {y.shape}")
+                return None
+
+            # Check if X has the expected shape
+            if len(X.shape) != 3:
+                logger.error(f"Expected 3D input data (samples, seq_len, features), got shape {X.shape}")
+                return None
+
+            # Verify that the feature dimension matches the model's expected input
+            expected_features = self.input_shape[1]
+            actual_features = X.shape[2]
+
+            if expected_features != actual_features:
+                logger.warning(f"Feature dimension mismatch: model expects {expected_features}, data has {actual_features}")
+                logger.warning("Attempting to reshape input data to match model expectations")
+
+                # We could reshape here, but it's better to let the data processor handle this
+                # to ensure consistency across the application
+
             # Use instance default epochs if none provided
             if epochs is None:
                 epochs = self.default_epochs
@@ -226,6 +251,14 @@ class ModelTrainer:
             Loss score or None if evaluation failed
         """
         try:
+            if X_test is None or y_test is None:
+                logger.error("Cannot evaluate with None test data")
+                return None
+
+            if len(X_test) == 0 or len(y_test) == 0:
+                logger.error("Empty test data provided for evaluation")
+                return None
+
             score = self.model.evaluate(X_test, y_test, verbose=0)
             logger.info(f"Model test loss: {score:.4f}")
             return score

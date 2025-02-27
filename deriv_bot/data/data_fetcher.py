@@ -18,12 +18,13 @@ Interactions:
 - Relations: Used by main trading loop and model training
 
 Author: Trading Bot Team
-Last modified: 2024-02-26
+Last modified: 2025-02-27
 """
 import pandas as pd
 import numpy as np
 import asyncio
 import time
+import sys  # Added for memory size calculations
 from deriv_bot.monitor.logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -31,12 +32,21 @@ logger = setup_logger(__name__)
 class DataFetcher:
     def __init__(self, connector):
         self.connector = connector
-        self.last_fetch_time = {}  # Para limitar la frecuencia de solicitudes por símbolo
-        self.fetch_cooldown = 10  # Tiempo mínimo entre solicitudes para el mismo símbolo
-        self.cache = {}  # Caché simple de datos por símbolo y intervalo
+        self.last_fetch_time = {}  # Track last request timestamp per symbol to limit request frequency
+        self.fetch_cooldown = 10   # Minimum time between requests for the same symbol
+        self.cache = {}            # Simple cache of data by symbol and interval
+        self.cache_expiry = 3600   # Cache expiry in seconds (1 hour default)
 
     async def check_trading_enabled(self, symbol):
-        """Verificar si el trading está habilitado para el símbolo"""
+        """
+        Check if trading is enabled for the symbol
+
+        Args:
+            symbol: Trading symbol to check
+
+        Returns:
+            bool: True if trading is enabled, False otherwise
+        """
         try:
             active_symbols = await self.connector.get_active_symbols()
             if not active_symbols or "error" in active_symbols:
@@ -48,65 +58,79 @@ class DataFetcher:
 
             return False
         except Exception as e:
-            logger.error(f"Error verificando disponibilidad del símbolo: {str(e)}")
+            logger.error(f"Error checking symbol availability: {str(e)}")
             return False
 
     def is_symbol_available(self, symbol):
         """
-        Método sincrónico para verificar si un símbolo está disponible para trading.
-        Este método es utilizado por AssetSelector.
+        Synchronous method to check if a symbol is available for trading.
+        This method is used by AssetSelector.
 
         Args:
-            symbol: Símbolo a verificar
+            symbol: Symbol to check
 
         Returns:
-            bool: True si el símbolo está disponible, False en caso contrario
+            bool: True if the symbol is available, False otherwise
         """
-        # Creamos un evento de loop para llamar al método asincrónico
+        # Create a loop event to call the asynchronous method
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
-                # Si el loop ya está corriendo, creamos una tarea
+                # If the loop is already running, create a task
                 future = asyncio.run_coroutine_threadsafe(
                     self.check_trading_enabled(symbol), loop)
-                return future.result(timeout=10)  # Timeout de 10 segundos
+                return future.result(timeout=10)  # 10 second timeout
             else:
-                # Si no hay loop corriendo, ejecutamos directamente
+                # If no loop is running, execute directly
                 return loop.run_until_complete(self.check_trading_enabled(symbol))
         except Exception as e:
-            logger.error(f"Error en is_symbol_available para {symbol}: {str(e)}")
+            logger.error(f"Error in is_symbol_available for {symbol}: {str(e)}")
             return False
 
     async def fetch_historical_data(self, symbol, interval, count=1000, retry_attempts=5, use_cache=True):
-        """Fetch historical data with improved error handling"""
+        """
+        Fetch historical data with improved error handling and caching
+
+        Args:
+            symbol: Trading symbol
+            interval: Candle interval in seconds
+            count: Number of candles to request
+            retry_attempts: Number of retry attempts
+            use_cache: Whether to use cached data if available
+
+        Returns:
+            DataFrame with historical data or None if failed
+        """
+        # First check connection availability
         if not await self.connector.check_connection():
             logger.warning("Connection not available, attempting to reconnect...")
             if not await self.connector.reconnect():
                 logger.error("Failed to establish connection")
                 return None
 
+        # Check if trading is enabled for this symbol
         if not await self.check_trading_enabled(symbol):
             logger.error(f"Trading not available for {symbol}")
             return None
 
         cache_key = f"{symbol}_{interval}"
 
-        # Verificar limitación de frecuencia
+        # Check rate limiting
         current_time = time.time()
         if symbol in self.last_fetch_time:
             time_since_last = current_time - self.last_fetch_time[symbol]
             if time_since_last < self.fetch_cooldown:
-                # Si tenemos caché y estamos dentro del periodo de cooldown, usar caché
+                # If we have cache and we're within cooldown period, use cache
                 if use_cache and cache_key in self.cache:
                     logger.debug(f"Using cached data for {symbol} (cooldown: {self.fetch_cooldown - time_since_last:.1f}s)")
                     return self.cache[cache_key]
 
-                # Si necesitamos esperar, calculamos el tiempo restante
+                # If we need to wait, calculate remaining time
                 wait_time = self.fetch_cooldown - time_since_last
                 logger.debug(f"Rate limiting for {symbol}, waiting {wait_time:.1f}s")
                 await asyncio.sleep(wait_time)
 
-        # Intentar hasta el número de reintentos especificado
+        # Attempt up to the specified number of retries
         for attempt in range(retry_attempts):
             try:
                 # Validate symbol format
@@ -114,21 +138,21 @@ class DataFetcher:
                     logger.error(f"Invalid symbol format: {symbol}")
                     return None
 
-                # Verificar estado de conexión
+                # Check connection status
                 if not await self.connector.check_connection():
                     logger.warning(f"Connection not available for {symbol} data fetch, attempt {attempt+1}/{retry_attempts}")
                     if attempt < retry_attempts - 1:
-                        await asyncio.sleep(2 * (attempt + 1))  # Espera creciente entre intentos
+                        await asyncio.sleep(2 * (attempt + 1))  # Increasing wait between attempts
                     continue
 
-                # Verificar si el trading está habilitado
+                # Check if trading is enabled
                 if not await self.check_trading_enabled(symbol):
-                    logger.warning(f"Trading no disponible para {symbol} en este momento")
+                    logger.warning(f"Trading not available for {symbol} at this time")
                     return None
 
                 # Request historical data
-                # Pedimos más candles para compensar posibles datos faltantes
-                adjusted_count = min(int(count * 1.2), 5000)  # 20% más, máximo 5000
+                # Request more candles to compensate for potential missing data
+                adjusted_count = min(int(count * 1.2), 5000)  # 20% more, maximum 5000
 
                 request = {
                     "ticks_history": symbol,
@@ -142,7 +166,7 @@ class DataFetcher:
 
                 response = await self.connector.send_request(request)
 
-                # Actualizar timestamp de última solicitud
+                # Update last request timestamp
                 self.last_fetch_time[symbol] = time.time()
 
                 if "error" in response:
@@ -161,12 +185,12 @@ class DataFetcher:
 
                 candles = response["candles"]
 
-                # Verificar si tenemos suficientes velas
+                # Check if we have enough candles
                 if len(candles) < count:
                     logger.warning(f"Received fewer candles than requested: {len(candles)} vs {count}")
-                    # Si es demasiado poco, intentar con un count mayor
-                    if len(candles) < count * 0.8 and attempt < retry_attempts - 1:  # Menos del 80% de lo solicitado
-                        increased_count = min(int(count * 1.5), 5000)  # Aumentar 50% pero no más de 5000
+                    # If it's too few, try with a higher count
+                    if len(candles) < count * 0.8 and attempt < retry_attempts - 1:  # Less than 80% of requested
+                        increased_count = min(int(count * 1.5), 5000)  # Increase by 50% but not more than 5000
                         logger.warning(f"Requesting increased count of {increased_count} candles...")
                         request["count"] = increased_count
                         await asyncio.sleep(2)
@@ -188,7 +212,7 @@ class DataFetcher:
                 # Sort index to ensure chronological order
                 df.sort_index(inplace=True)
 
-                # Guardar en caché
+                # Save to cache
                 self.cache[cache_key] = df
 
                 logger.info(f"Successfully fetched {len(df)} candles for {symbol}")
@@ -199,8 +223,8 @@ class DataFetcher:
                 if attempt < retry_attempts - 1:
                     await asyncio.sleep(2 * (attempt + 1))
 
-        # Si llegamos aquí, todos los intentos fallaron
-        # Intentar devolver caché como último recurso
+        # If we get here, all attempts failed
+        # Try to return cache as a last resort
         if use_cache and cache_key in self.cache:
             logger.warning(f"All fetch attempts failed for {symbol}, using cached data")
             return self.cache[cache_key]
@@ -209,18 +233,21 @@ class DataFetcher:
 
     async def fetch_sufficient_data(self, symbol, interval, min_required_samples, max_attempts=3):
         """
-        Asegura que suficientes muestras sean obtenidas para el análisis
+        Ensures that sufficient samples are obtained for analysis
 
         Args:
             symbol: Trading symbol
             interval: Candle interval in seconds
-            min_required_samples: Mínima cantidad de muestras requeridas
-            max_attempts: Número máximo de intentos
+            min_required_samples: Minimum number of samples required
+            max_attempts: Maximum number of attempts
+
+        Returns:
+            DataFrame with sufficient historical data or None if failed
         """
         for attempt in range(max_attempts):
-            # Calcular cuántas velas necesitamos con un margen
+            # Calculate how many candles we need with a margin
             count_with_margin = min_required_samples * 1.5
-            # Limitado a 3000 para no exceder límites de API
+            # Limited to 3000 to not exceed API limits
             count_to_fetch = min(3000, int(count_with_margin))
 
             logger.info(f"Fetching {count_to_fetch} candles to ensure {min_required_samples} samples (attempt {attempt+1})")
@@ -232,13 +259,13 @@ class DataFetcher:
                     await asyncio.sleep(3)
                 continue
 
-            # Verificar si tenemos suficientes datos
+            # Check if we have enough data
             if len(df) >= min_required_samples:
                 logger.info(f"Successfully obtained {len(df)} samples (needed {min_required_samples})")
                 return df
             else:
                 logger.warning(f"Insufficient data: {len(df)} samples, need at least {min_required_samples}")
-                # Si es el último intento, devolver lo que tenemos
+                # If it's the last attempt, return what we have
                 if attempt == max_attempts - 1:
                     logger.warning("Returning incomplete data after maximum attempts")
                     return df
@@ -253,10 +280,13 @@ class DataFetcher:
         Args:
             symbol: Trading symbol (e.g., "frxEURUSD")
             retry_attempts: Number of retry attempts
+
+        Returns:
+            Subscription response or None if failed
         """
         for attempt in range(retry_attempts):
             try:
-                # Verificar estado de conexión
+                # Check connection status
                 if not await self.connector.check_connection():
                     logger.warning(f"Connection not available for tick subscription, attempt {attempt+1}/{retry_attempts}")
                     if attempt < retry_attempts - 1:
@@ -287,10 +317,13 @@ class DataFetcher:
 
         Args:
             retry_attempts: Number of retry attempts
+
+        Returns:
+            List of available symbols or None if failed
         """
         for attempt in range(retry_attempts):
             try:
-                # Verificar estado de conexión
+                # Check connection status
                 if not await self.connector.check_connection():
                     logger.warning(f"Connection not available for symbol list, attempt {attempt+1}/{retry_attempts}")
                     if attempt < retry_attempts - 1:
@@ -321,16 +354,16 @@ class DataFetcher:
 
     def clear_cache(self, symbol=None, older_than=3600):
         """
-        Limpiar caché de datos
+        Clear data cache
 
         Args:
-            symbol: Símbolo específico a limpiar (None para todos)
-            older_than: Eliminar entradas más antiguas que estos segundos
+            symbol: Specific symbol to clear (None for all)
+            older_than: Remove entries older than these seconds
         """
         current_time = time.time()
 
         if symbol:
-            # Limpiar sólo para el símbolo especificado
+            # Clear only for the specified symbol
             keys_to_remove = [k for k in self.cache if k.startswith(f"{symbol}_")]
             for key in keys_to_remove:
                 del self.cache[key]
@@ -338,13 +371,63 @@ class DataFetcher:
                     del self.last_fetch_time[symbol]
             logger.debug(f"Cleared cache for {symbol}")
         else:
-            # Limpiar entradas antiguas para todos los símbolos
+            # Clear old entries for all symbols
             for symbol in list(self.last_fetch_time.keys()):
                 if current_time - self.last_fetch_time[symbol] > older_than:
-                    # Eliminar todas las entradas de caché para este símbolo
+                    # Remove all cache entries for this symbol
                     keys_to_remove = [k for k in self.cache if k.startswith(f"{symbol}_")]
                     for key in keys_to_remove:
                         del self.cache[key]
                     del self.last_fetch_time[symbol]
 
             logger.debug("Cleared expired cache entries")
+
+    def get_cache_info(self):
+        """
+        Get information about the current cache state
+
+        Returns:
+            dict: Cache statistics
+        """
+        stats = {
+            'total_cached_items': len(self.cache),
+            'symbols_in_cache': len(set([k.split('_')[0] for k in self.cache.keys()])) if self.cache else 0,
+            'cache_size_kb': sum(sys.getsizeof(df) for df in self.cache.values()) / 1024 if self.cache else 0,
+        }
+        return stats
+
+    async def optimize_cache(self, max_size_mb=100):
+        """
+        Optimize cache by removing least recently used items
+        when the cache exceeds the maximum size
+
+        Args:
+            max_size_mb: Maximum cache size in MB
+        """
+        try:
+            # Calculate current cache size
+            current_size_bytes = sum(sys.getsizeof(df) for df in self.cache.values())
+            current_size_mb = current_size_bytes / (1024 * 1024)
+
+            if current_size_mb > max_size_mb:
+                logger.info(f"Cache size ({current_size_mb:.2f} MB) exceeds limit ({max_size_mb} MB), optimizing...")
+
+                # Sort items by last fetch time
+                sorted_items = sorted(
+                    [(k, self.last_fetch_time.get(k.split('_')[0], 0)) for k in self.cache.keys()],
+                    key=lambda x: x[1]
+                )
+
+                # Remove oldest items until we're under the limit
+                items_removed = 0
+                while current_size_mb > max_size_mb * 0.8 and sorted_items:  # Target 80% of max
+                    oldest_key = sorted_items.pop(0)[0]
+                    if oldest_key in self.cache:
+                        current_size_mb -= sys.getsizeof(self.cache[oldest_key]) / (1024 * 1024)
+                        del self.cache[oldest_key]
+                        items_removed += 1
+
+                logger.info(f"Cache optimization complete: removed {items_removed} items, " 
+                           f"new size: {current_size_mb:.2f} MB")
+        except Exception as e:
+            logger.error(f"Error optimizing cache: {str(e)}")

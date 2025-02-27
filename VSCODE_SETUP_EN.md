@@ -300,6 +300,16 @@ For efficient development and operation, the following workflow is recommended:
 3. Check memory requirements for training
 4. Try reducing model size or data amount
 
+### TensorFlow/Keras Version Compatibility
+
+**Problem**: Errors related to model saving with native Keras format.
+
+**Solution**:
+1. The bot uses a custom checkpoint solution to handle TensorFlow/Keras version differences
+2. The error "options not supported with native Keras format" has been addressed internally
+3. Ensure you're using TensorFlow 2.10 or higher
+4. Do not downgrade TensorFlow as this could introduce other compatibility issues
+
 ### Bot Not Trading
 
 **Problem**: The bot runs but doesn't execute trades.

@@ -53,6 +53,7 @@ class DerivConnector:
         self.is_virtual = None
         self.balance = None
         self.currency = None
+        self.heartbeat_task = None
 
         # Log the environment we're connecting to
         env_mode = "REAL" if not self.config.is_demo() else "DEMO"
@@ -68,8 +69,8 @@ class DerivConnector:
             logger.debug(f"Connecting to {self.ws_url}")
             self.websocket = await websockets.connect(
                 self.ws_url,
-                ping_interval=10,
-                ping_timeout=30,
+                ping_interval=None,  # We'll handle our own ping
+                ping_timeout=None,   # Disable built-in ping timeout
                 close_timeout=15,
                 max_size=10 * 1024 * 1024,
                 extra_headers={
@@ -79,7 +80,7 @@ class DerivConnector:
             )
 
             # Set shorter timeouts for faster failure detection
-            self.ping_interval = 15
+            self.ping_interval = 30  # Increased from 15 to reduce frequency
             self.consecutive_failures = 0
 
             # Authorize connection
@@ -101,7 +102,9 @@ class DerivConnector:
             logger.info(f"Successfully connected to Deriv API in {env_mode} mode")
 
             # Start ping task
-            asyncio.create_task(self._keep_alive())
+            if self.heartbeat_task:
+                self.heartbeat_task.cancel()
+            self.heartbeat_task = asyncio.create_task(self._keep_alive())
             return True
 
         except Exception as e:
@@ -117,6 +120,13 @@ class DerivConnector:
     async def close(self):
         """Close WebSocket connection"""
         self.active = False
+        if self.heartbeat_task:
+            try:
+                self.heartbeat_task.cancel()
+                self.heartbeat_task = None
+            except Exception as e:
+                logger.error(f"Error cancelling heartbeat task: {str(e)}")
+
         if self.websocket:
             try:
                 await self.websocket.close()
@@ -210,14 +220,14 @@ class DerivConnector:
         """Keep the WebSocket connection alive with periodic pings"""
         while self.active:
             try:
-                await asyncio.sleep(5)
+                await asyncio.sleep(self.ping_interval)
 
                 # Check connection state
                 if not self.websocket or self.websocket.closed:
                     logger.warning("WebSocket closed, attempting immediate reconnect...")
                     if await self.reconnect():
                         continue
-                    await asyncio.sleep(1)
+                    await asyncio.sleep(5)  # Wait longer between reconnect attempts
                     continue
 
                 # Send ping to verify connection
@@ -229,11 +239,13 @@ class DerivConnector:
 
                     response = await asyncio.wait_for(
                         self.send_request(ping_req),
-                        timeout=15
+                        timeout=20  # Increased timeout
                     )
 
                     if response:
-                        if "pong" in response:
+                        # Check for valid ping response (should contain 'ping': 'pong')
+                        if "ping" in response and response.get("ping") == "pong":
+                            # This is a valid ping response
                             self.last_ping_time = asyncio.get_event_loop().time()
                             self.last_message_time = self.last_ping_time
                             self.consecutive_failures = 0
@@ -246,18 +258,23 @@ class DerivConnector:
                             self.consecutive_failures = 0
                             continue
                         else:
-                            logger.warning(f"Unexpected ping response: {response}")
-                            self.consecutive_failures += 1
+                            # Log but don't treat as error as long as we got a response
+                            logger.debug(f"Non-standard response received, but connection is active: {response}")
+                            self.last_ping_time = asyncio.get_event_loop().time()
+                            self.last_message_time = self.last_ping_time
+                            # Don't increment failures for non-standard responses
+                            continue
                     else:
                         logger.warning("Empty ping response")
                         self.consecutive_failures += 1
 
+                    # Only trigger reconnect after 3 consecutive failures
                     if self.consecutive_failures >= 3:
                         logger.warning("Multiple ping failures, reconnecting...")
                         await self.reconnect()
 
                 except asyncio.TimeoutError:
-                    logger.warning("Ping timed out after 15 seconds")
+                    logger.warning(f"Ping timed out after {self.ping_interval} seconds")
                     self.consecutive_failures += 1
                     if self.consecutive_failures >= 2:
                         logger.warning("Multiple ping timeouts, reconnecting...")
@@ -270,8 +287,8 @@ class DerivConnector:
 
                 # Check if we've received any messages recently
                 current_time = asyncio.get_event_loop().time()
-                if self.last_message_time and current_time - self.last_message_time > 30:
-                    logger.warning("No messages received in the last 30 seconds, reconnecting...")
+                if self.last_message_time and current_time - self.last_message_time > 60:  # Increased from 30s to 60s
+                    logger.warning("No messages received in the last 60 seconds, reconnecting...")
                     await self.reconnect()
                     continue
 
@@ -307,10 +324,11 @@ class DerivConnector:
             try:
                 response = await asyncio.wait_for(
                     self.send_request(ping_req),
-                    timeout=5
+                    timeout=10  # Increased from 5s to 10s
                 )
 
-                if response and ("pong" in response or "ping" in response):
+                # Updated check to match the proper ping response format
+                if response and "ping" in response and response.get("ping") == "pong":
                     self.last_ping_time = asyncio.get_event_loop().time()
                     return True
                 return False
@@ -322,7 +340,7 @@ class DerivConnector:
             return False
 
     async def reconnect(self):
-        """Attempt to reconnect if connection is lost"""
+        """Attempt to reconnect if connection is lost using exponential backoff"""
         if not self.active:
             logger.debug("Not reconnecting as connector is marked inactive")
             return False
@@ -384,7 +402,7 @@ class DerivConnector:
                             if attempt < 2:
                                 if attempt == 0:  # Only try to reconnect on first failure
                                     await self.reconnect()
-                                await asyncio.sleep(1)
+                                await asyncio.sleep(2)  # Increased from 1s to 2s
                                 continue
                             else:
                                 return None
@@ -418,7 +436,7 @@ class DerivConnector:
                             # Try to reconnect before retrying
                             if attempt == 0:  # Only try to reconnect on first failure
                                 await self.reconnect()
-                            await asyncio.sleep(1)  # Brief pause
+                            await asyncio.sleep(2)  # Increased from 1s to 2s
                         else:
                             logger.error("Connection permanently closed after 3 attempts")
                             return None
@@ -426,7 +444,7 @@ class DerivConnector:
                     except Exception as e:
                         logger.error(f"Error sending request (attempt {attempt+1}): {str(e)}")
                         if attempt < 2:
-                            await asyncio.sleep(1)
+                            await asyncio.sleep(2)  # Increased from 1s to 2s
                         else:
                             return None
 

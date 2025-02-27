@@ -125,6 +125,21 @@ python clean_models.py --action both
 - `DERIV_REAL_MODE_CONFIRMED`: Confirmación para modo real (establecer a "yes")
 - `APP_ID`: ID de aplicación Deriv
 
+### 3.4 Compatibilidad con TensorFlow y Keras
+
+El sistema ha sido diseñado para funcionar con las versiones más recientes de TensorFlow/Keras:
+
+- Utiliza el formato nativo `.keras` para guardar modelos
+- Implementa un mecanismo personalizado de checkpoint para evitar problemas de compatibilidad
+- No se recomienda usar versiones anteriores a TensorFlow 2.10
+
+#### Solución a Errores Comunes con TensorFlow
+
+Si encuentras el error `The following argument(s) are not supported with the native Keras format: ['options']`:
+- Este error ocurre con versiones recientes de TensorFlow al usar parámetros incompatibles con el formato nativo de Keras
+- El sistema utiliza una implementación personalizada de BestModelCheckpoint para evitar este problema
+- No es necesario modificar el código ya que esta solución está integrada
+
 ## 4. Solución de Problemas en Entornos Live
 
 ### 4.1 Errores de Conexión API
@@ -157,7 +172,7 @@ El bot incluye funcionalidad de recarga automática para cuentas demo que:
 - Reinicia cuando se alcanza `DEMO_MAX_DAILY_LOSS`
 - Mantiene registro de recargas en los logs
 
-### 4.4  Variables de entorno
+### 4.5 Variables de entorno
 - DERIV_API_TOKEN_DEMO
 - DERIV_API_TOKEN_REAL
 - DERIV_BOT_ENV

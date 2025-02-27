@@ -1,0 +1,723 @@
+2025-02-27 11:34:15,863 - deriv_bot.data.deriv_connector - WARNING - Connection closed while sending request. Attempt 1/3
+2025-02-27 11:34:15,865 - deriv_bot.data.deriv_connector - INFO - Connection closed
+2025-02-27 11:34:15,865 - deriv_bot.data.deriv_connector - INFO - Attempting reconnection 1/15 with 5.00s delay
+2025-02-27 10:29:32,959 - deriv_bot.utils.config - INFO - Loaded environment from .env
+2025-02-27 10:29:32,959 - deriv_bot.utils.config - INFO - Trading bot initialized in DEMO mode
+2025-02-27 10:29:32,959 - deriv_bot.utils.config - INFO - Environment set to DEMO mode
+2025-02-27 10:29:32,959 - deriv_bot.data.deriv_connector - INFO - DerivConnector initialized in DEMO mode
+2025-02-27 10:29:34,142 - deriv_bot.data.deriv_connector - INFO - API authorization successful - DEMO account
+2025-02-27 10:29:34,142 - deriv_bot.data.deriv_connector - INFO - Account balance: 9962.81 USD
+2025-02-27 10:29:34,142 - deriv_bot.data.deriv_connector - INFO - Successfully connected to Deriv API in DEMO mode
+2025-02-27 10:29:34,142 - deriv_bot.risk.risk_manager - INFO - RiskManager initialized with DEMO profile
+2025-02-27 10:29:34,142 - deriv_bot.risk.risk_manager - INFO - Parameters: max_position=400, max_daily_loss=250, stop_loss=0.08%, risk_multiplier=3.0
+2025-02-27 10:29:34,142 - deriv_bot.utils.model_manager - INFO - ModelManager initialized with max_models=5
+2025-02-27 10:29:34,151 - __main__ - INFO - All components initialized successfully
+2025-02-27 10:29:34,151 - __main__ - INFO - === Starting Deriv ML Trading Bot ===
+2025-02-27 10:29:34,151 - __main__ - INFO - Start time: 2025-02-27 10:29:32.959187
+2025-02-27 10:29:34,151 - __main__ - INFO - Mode: DEMO
+2025-02-27 10:29:34,151 - __main__ - INFO - Symbol: frxEURUSD
+2025-02-27 10:29:34,151 - __main__ - INFO - Trading Parameters:
+2025-02-27 10:29:34,151 - __main__ - INFO - - Stake Amount: 10.0
+2025-02-27 10:29:34,151 - __main__ - INFO - - Duration: 30s
+2025-02-27 10:29:34,151 - __main__ - INFO - - Training Interval: 4.0h
+2025-02-27 10:29:34,151 - __main__ - INFO - - Model Types: ['short_term', 'medium_term', 'long_term']
+2025-02-27 10:29:34,151 - __main__ - INFO - ====================================
+2025-02-27 10:29:34,151 - __main__ - INFO - Loading existing short_term model from models\best_model_short_term.keras
+2025-02-27 10:29:34,274 - deriv_bot.strategy.model_predictor - WARNING - Failed to load models\best_model_short_term.keras: Unrecognized keyword arguments passed to LSTM: {'batch_input_shape': [None, 10, 46], 'time_major': False}
+2025-02-27 10:29:34,275 - deriv_bot.strategy.model_predictor - ERROR - No models found at path: models\best_model_short_term.keras
+2025-02-27 10:29:34,275 - __main__ - INFO - Loading existing medium_term model from models\best_model_medium_term.keras
+2025-02-27 10:29:34,303 - deriv_bot.strategy.model_predictor - WARNING - Failed to load models\best_model_medium_term.keras: Unrecognized keyword arguments passed to LSTM: {'batch_input_shape': [None, 10, 46], 'time_major': False}
+2025-02-27 10:29:34,303 - deriv_bot.strategy.model_predictor - ERROR - No models found at path: models\best_model_medium_term.keras
+2025-02-27 10:29:34,303 - __main__ - INFO - Loading existing long_term model from models\best_model_long_term.keras
+2025-02-27 10:29:34,431 - deriv_bot.strategy.model_predictor - WARNING - Failed to load models\best_model_long_term.keras: Unrecognized keyword arguments passed to LSTM: {'batch_input_shape': [None, 10, 46], 'time_major': False}
+2025-02-27 10:29:34,431 - deriv_bot.strategy.model_predictor - ERROR - No models found at path: models\best_model_long_term.keras
+2025-02-27 10:29:34,431 - __main__ - INFO - Bot running for: 0:00:01.472149
+2025-02-27 10:29:34,431 - __main__ - INFO - Starting model retraining cycle...
+2025-02-27 10:29:34,431 - __main__ - INFO - Fetching 1000 historical data points for frxEURUSD from API...
+2025-02-27 10:29:35,711 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 1200 candles for frxEURUSD
+2025-02-27 10:29:35,711 - __main__ - INFO - Successfully fetched 1200 data points from API
+2025-02-27 10:29:35,711 - __main__ - INFO - Training short_term model with 1200 data points
+2025-02-27 10:29:35,711 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (1200, 4)
+2025-02-27 10:29:35,720 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04124, Max: 1.04930
+2025-02-27 10:29:35,720 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00115, Max: 0.00054
+2025-02-27 10:29:35,744 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 1199 rows remaining
+2025-02-27 10:29:35,744 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (1199, 10)
+2025-02-27 10:29:35,745 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (1199, 10)
+2025-02-27 10:29:35,747 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00115015], Max: [0.0005371]
+2025-02-27 10:29:35,748 - deriv_bot.data.data_processor - WARNING - Received None for sequence_length, using default minimum value
+2025-02-27 10:29:35,748 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 10
+2025-02-27 10:29:35,751 - deriv_bot.data.data_processor - INFO - Creating 1189 sequences with length 10
+2025-02-27 10:29:35,799 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (1189, 10, 9), y shape: (1189,)
+2025-02-27 10:29:35,799 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 10:29:35,799 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 10:29:35,799 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 10:29:35,799 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (1189, 10, 46)
+2025-02-27 10:29:35,799 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (1189, 10, 46), y shape: (1189,)
+2025-02-27 10:29:35,804 - __main__ - INFO - Prepared training data with shape X: (1189, 10, 46), y: (1189,)
+2025-02-27 10:29:35,961 - deriv_bot.strategy.model_trainer - INFO - Model trainer initialized with input shape (10, 46) and default epochs 50
+2025-02-27 10:29:35,970 - deriv_bot.strategy.model_trainer - INFO - Training model for 50 epochs with batch size 32
+2025-02-27 10:29:45,125 - deriv_bot.strategy.model_trainer - INFO - Model training completed for short_term model
+2025-02-27 10:29:45,125 - __main__ - INFO - short_term model training completed successfully
+2025-02-27 10:29:45,267 - deriv_bot.utils.model_manager - INFO - Model saved to models\trained_model_short_term_20250227_102945.keras
+2025-02-27 10:29:45,274 - deriv_bot.utils.model_manager - INFO - Model metadata with scaler saved to models\trained_model_short_term_20250227_102945_metadata.pkl
+2025-02-27 10:29:45,284 - deriv_bot.utils.model_manager - INFO - Archiving old models of type: short_term
+2025-02-27 10:29:45,296 - deriv_bot.utils.model_manager - INFO - Keeping 5 recent models, archiving 5 old models
+2025-02-27 10:29:45,339 - deriv_bot.utils.model_manager - INFO - Successfully archived 5 model files
+2025-02-27 10:29:45,339 - __main__ - INFO - Saved short_term model to models\trained_model_short_term_20250227_102945.keras
+2025-02-27 10:29:45,615 - deriv_bot.strategy.model_predictor - INFO - Loaded model from models\trained_model_short_term_20250227_102945.keras
+2025-02-27 10:29:45,636 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_short_term_20250227_102945_metadata.pkl
+2025-02-27 10:29:45,637 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_short_term_20250227_102945_metadata.pkl
+2025-02-27 10:29:45,638 - deriv_bot.strategy.model_predictor - INFO - Successfully loaded 1 model(s)
+2025-02-27 10:29:45,640 - __main__ - INFO - short_term model successfully trained
+2025-02-27 10:29:45,646 - __main__ - INFO - Training medium_term model with 1199 data points
+2025-02-27 10:29:45,647 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (1199, 10)
+2025-02-27 10:29:45,660 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04124, Max: 1.04926
+2025-02-27 10:29:45,661 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00115, Max: 0.00054
+2025-02-27 10:29:45,681 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 1150 rows remaining
+2025-02-27 10:29:45,687 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (1150, 10)
+2025-02-27 10:29:45,689 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (1150, 10)
+2025-02-27 10:29:45,690 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00115015], Max: [0.0005371]
+2025-02-27 10:29:45,691 - deriv_bot.data.data_processor - WARNING - Received None for sequence_length, using default minimum value
+2025-02-27 10:29:45,691 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 10
+2025-02-27 10:29:45,692 - deriv_bot.data.data_processor - INFO - Creating 1140 sequences with length 10
+2025-02-27 10:29:45,749 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (1140, 10, 9), y shape: (1140,)
+2025-02-27 10:29:45,752 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 10:29:45,753 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 10:29:45,755 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 10:29:45,756 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (1140, 10, 46)
+2025-02-27 10:29:45,757 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (1140, 10, 46), y shape: (1140,)
+2025-02-27 10:29:45,758 - __main__ - INFO - Prepared training data with shape X: (1140, 10, 46), y: (1140,)
+2025-02-27 10:29:45,853 - deriv_bot.strategy.model_trainer - INFO - Model trainer initialized with input shape (10, 46) and default epochs 50
+2025-02-27 10:29:45,853 - deriv_bot.strategy.model_trainer - INFO - Training model for 50 epochs with batch size 32
+2025-02-27 10:30:00,270 - deriv_bot.strategy.model_trainer - INFO - Model training completed for medium_term model
+2025-02-27 10:30:00,270 - __main__ - INFO - medium_term model training completed successfully
+2025-02-27 10:30:00,337 - deriv_bot.utils.model_manager - INFO - Model saved to models\trained_model_medium_term_20250227_103000.keras
+2025-02-27 10:30:00,339 - deriv_bot.utils.model_manager - INFO - Model metadata with scaler saved to models\trained_model_medium_term_20250227_103000_metadata.pkl
+2025-02-27 10:30:00,340 - deriv_bot.utils.model_manager - INFO - Archiving old models of type: medium_term
+2025-02-27 10:30:00,351 - deriv_bot.utils.model_manager - INFO - Keeping 5 recent models, archiving 5 old models
+2025-02-27 10:30:00,372 - deriv_bot.utils.model_manager - INFO - Successfully archived 5 model files
+2025-02-27 10:30:00,373 - __main__ - INFO - Saved medium_term model to models\trained_model_medium_term_20250227_103000.keras
+2025-02-27 10:30:00,522 - deriv_bot.strategy.model_predictor - INFO - Loaded model from models\trained_model_medium_term_20250227_103000.keras
+2025-02-27 10:30:00,522 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_medium_term_20250227_103000_metadata.pkl
+2025-02-27 10:30:00,522 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_medium_term_20250227_103000_metadata.pkl
+2025-02-27 10:30:00,536 - deriv_bot.strategy.model_predictor - INFO - Successfully loaded 1 model(s)
+2025-02-27 10:30:00,537 - __main__ - INFO - medium_term model successfully trained
+2025-02-27 10:30:00,538 - __main__ - INFO - Training long_term model with 1150 data points
+2025-02-27 10:30:00,539 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (1150, 10)
+2025-02-27 10:30:00,543 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04124, Max: 1.04926
+2025-02-27 10:30:00,544 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00115, Max: 0.00054
+2025-02-27 10:30:00,548 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 1101 rows remaining
+2025-02-27 10:30:00,549 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (1101, 10)
+2025-02-27 10:30:00,550 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (1101, 10)
+2025-02-27 10:30:00,552 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00115015], Max: [0.0005371]
+2025-02-27 10:30:00,552 - deriv_bot.data.data_processor - WARNING - Received None for sequence_length, using default minimum value
+2025-02-27 10:30:00,552 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 10
+2025-02-27 10:30:00,552 - deriv_bot.data.data_processor - INFO - Creating 1091 sequences with length 10
+2025-02-27 10:30:00,591 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (1091, 10, 9), y shape: (1091,)
+2025-02-27 10:30:00,591 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 10:30:00,591 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 10:30:00,591 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 10:30:00,591 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (1091, 10, 46)
+2025-02-27 10:30:00,591 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (1091, 10, 46), y shape: (1091,)
+2025-02-27 10:30:00,591 - __main__ - INFO - Prepared training data with shape X: (1091, 10, 46), y: (1091,)
+2025-02-27 10:30:00,702 - deriv_bot.strategy.model_trainer - INFO - Model trainer initialized with input shape (10, 46) and default epochs 50
+2025-02-27 10:30:00,702 - deriv_bot.strategy.model_trainer - INFO - Training model for 50 epochs with batch size 32
+2025-02-27 10:30:14,500 - deriv_bot.strategy.model_trainer - INFO - Model training completed for long_term model
+2025-02-27 10:30:14,500 - __main__ - INFO - long_term model training completed successfully
+2025-02-27 10:30:14,584 - deriv_bot.utils.model_manager - INFO - Model saved to models\trained_model_long_term_20250227_103014.keras
+2025-02-27 10:30:14,587 - deriv_bot.utils.model_manager - INFO - Model metadata with scaler saved to models\trained_model_long_term_20250227_103014_metadata.pkl
+2025-02-27 10:30:14,588 - deriv_bot.utils.model_manager - INFO - Archiving old models of type: long_term
+2025-02-27 10:30:14,594 - deriv_bot.utils.model_manager - INFO - Keeping 5 recent models, archiving 4 old models
+2025-02-27 10:30:14,600 - deriv_bot.utils.model_manager - INFO - Successfully archived 4 model files
+2025-02-27 10:30:14,602 - __main__ - INFO - Saved long_term model to models\trained_model_long_term_20250227_103014.keras
+2025-02-27 10:30:14,781 - deriv_bot.strategy.model_predictor - INFO - Loaded model from models\trained_model_long_term_20250227_103014.keras
+2025-02-27 10:30:14,786 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_long_term_20250227_103014_metadata.pkl
+2025-02-27 10:30:14,786 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_long_term_20250227_103014_metadata.pkl
+2025-02-27 10:30:14,796 - deriv_bot.strategy.model_predictor - INFO - Successfully loaded 1 model(s)
+2025-02-27 10:30:14,796 - __main__ - INFO - long_term model successfully trained
+2025-02-27 10:30:14,797 - __main__ - INFO - All models successfully retrained
+2025-02-27 10:30:14,797 - __main__ - INFO - Next training scheduled for: 2025-02-27 14:29:34.431336
+2025-02-27 10:30:15,608 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 72 candles for frxEURUSD
+2025-02-27 10:30:15,608 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (72, 4)
+2025-02-27 10:30:15,612 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04124, Max: 1.04397
+2025-02-27 10:30:15,612 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00065, Max: 0.00039
+2025-02-27 10:30:15,623 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 71 rows remaining
+2025-02-27 10:30:15,623 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (71, 10)
+2025-02-27 10:30:15,624 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (71, 10)
+2025-02-27 10:30:15,626 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00065253], Max: [0.00039349]
+2025-02-27 10:30:15,626 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 30
+2025-02-27 10:30:15,627 - deriv_bot.data.data_processor - INFO - Creating 41 sequences with length 30
+2025-02-27 10:30:15,630 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (41, 30, 9), y shape: (41,)
+2025-02-27 10:30:15,631 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 10:30:15,633 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 10:30:15,633 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 10:30:15,634 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (41, 30, 46)
+2025-02-27 10:30:15,635 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (41, 30, 46), y shape: (41,)
+2025-02-27 10:30:15,635 - __main__ - INFO - Using short_term model for prediction
+2025-02-27 10:30:16,007 - deriv_bot.strategy.model_predictor - WARNING - Model default prediction 37.62% exceeds normal range
+2025-02-27 10:30:16,007 - deriv_bot.strategy.model_predictor - INFO - Clipped prediction to 0.50%
+2025-02-27 10:30:16,007 - deriv_bot.strategy.model_predictor - INFO - Prediction made - Value: 0.50%, Confidence: 0.70
+2025-02-27 10:30:16,007 - __main__ - INFO - Prediction: 0.50% (confidence: 0.70)
+2025-02-27 10:30:16,007 - deriv_bot.risk.risk_manager - INFO - Demo trade validated - Amount: 30.0, Current daily loss: 0
+2025-02-27 10:30:16,007 - deriv_bot.execution.order_executor - INFO - Placing CALL order - Symbol: frxEURUSD, Amount: 10.0, Duration: 30s
+2025-02-27 10:30:16,150 - deriv_bot.data.deriv_connector - WARNING - API error InputValidationFailed: Input validation failed: price
+2025-02-27 10:30:16,150 - deriv_bot.execution.order_executor - ERROR - Order placement failed: Input validation failed: price
+2025-02-27 10:30:16,150 - __main__ - INFO - 
+=== Hourly Performance Update ===
+2025-02-27 10:30:16,150 - __main__ - INFO - Total Runtime: 0:00:01.472149
+2025-02-27 10:30:16,150 - __main__ - INFO - Performance Metrics: {'total_trades': 0, 'wins': 0, 'losses': 0, 'win_rate': 0, 'total_profit': 0, 'max_drawdown': 0, 'avg_prediction_error': 0, 'direction_accuracy': 0, 'avg_profit_per_trade': 0, 'profit_factor': 0, 'sharpe_ratio': 0}
+2025-02-27 10:30:16,150 - __main__ - INFO - =================================
+2025-02-27 10:31:16,154 - __main__ - INFO - Bot running for: 0:01:43.195148
+2025-02-27 10:31:16,825 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 72 candles for frxEURUSD
+2025-02-27 10:31:16,825 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (72, 4)
+2025-02-27 10:31:16,827 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04124, Max: 1.04382
+2025-02-27 10:31:16,827 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00065, Max: 0.00039
+2025-02-27 10:31:16,839 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 71 rows remaining
+2025-02-27 10:31:16,839 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (71, 10)
+2025-02-27 10:31:16,839 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (71, 10)
+2025-02-27 10:31:16,839 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00065253], Max: [0.00039349]
+2025-02-27 10:31:16,843 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 30
+2025-02-27 10:31:16,844 - deriv_bot.data.data_processor - INFO - Creating 41 sequences with length 30
+2025-02-27 10:31:16,848 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (41, 30, 9), y shape: (41,)
+2025-02-27 10:31:16,849 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 10:31:16,849 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 10:31:16,850 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 10:31:16,850 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (41, 30, 46)
+2025-02-27 10:31:16,850 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (41, 30, 46), y shape: (41,)
+2025-02-27 10:31:16,850 - __main__ - INFO - Using short_term model for prediction
+2025-02-27 10:31:16,954 - deriv_bot.strategy.model_predictor - WARNING - Model default prediction 37.75% exceeds normal range
+2025-02-27 10:31:16,954 - deriv_bot.strategy.model_predictor - INFO - Clipped prediction to 0.50%
+2025-02-27 10:31:16,954 - deriv_bot.strategy.model_predictor - INFO - Prediction made - Value: 0.50%, Confidence: 0.70
+2025-02-27 10:31:16,954 - __main__ - INFO - Prediction: 0.50% (confidence: 0.70)
+2025-02-27 10:31:16,954 - deriv_bot.risk.risk_manager - INFO - Demo trade validated - Amount: 30.0, Current daily loss: 0
+2025-02-27 10:31:16,954 - deriv_bot.execution.order_executor - INFO - Placing CALL order - Symbol: frxEURUSD, Amount: 10.0, Duration: 30s
+2025-02-27 10:31:17,077 - deriv_bot.data.deriv_connector - WARNING - API error InputValidationFailed: Input validation failed: price
+2025-02-27 10:31:17,077 - deriv_bot.execution.order_executor - ERROR - Order placement failed: Input validation failed: price
+2025-02-27 10:32:17,070 - __main__ - INFO - Bot running for: 0:02:44.111442
+2025-02-27 10:32:17,747 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 72 candles for frxEURUSD
+2025-02-27 10:32:17,748 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (72, 4)
+2025-02-27 10:32:17,748 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04124, Max: 1.04382
+2025-02-27 10:32:17,748 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00065, Max: 0.00039
+2025-02-27 10:32:17,772 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 71 rows remaining
+2025-02-27 10:32:17,773 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (71, 10)
+2025-02-27 10:32:17,782 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (71, 10)
+2025-02-27 10:32:17,787 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00065253], Max: [0.00039349]
+2025-02-27 10:32:17,799 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 30
+2025-02-27 10:32:17,813 - deriv_bot.data.data_processor - INFO - Creating 41 sequences with length 30
+2025-02-27 10:32:17,816 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (41, 30, 9), y shape: (41,)
+2025-02-27 10:32:17,828 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 10:32:17,839 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 10:32:17,841 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 10:32:17,842 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (41, 30, 46)
+2025-02-27 10:32:17,842 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (41, 30, 46), y shape: (41,)
+2025-02-27 10:32:17,849 - __main__ - INFO - Using short_term model for prediction
+2025-02-27 10:32:18,129 - deriv_bot.strategy.model_predictor - WARNING - Model default prediction 37.04% exceeds normal range
+2025-02-27 10:32:18,129 - deriv_bot.strategy.model_predictor - INFO - Clipped prediction to 0.50%
+2025-02-27 10:32:18,131 - deriv_bot.strategy.model_predictor - INFO - Prediction made - Value: 0.50%, Confidence: 0.70
+2025-02-27 10:32:18,132 - __main__ - INFO - Prediction: 0.50% (confidence: 0.70)
+2025-02-27 10:32:18,133 - deriv_bot.risk.risk_manager - INFO - Demo trade validated - Amount: 30.0, Current daily loss: 0
+2025-02-27 10:32:18,134 - deriv_bot.execution.order_executor - INFO - Placing CALL order - Symbol: frxEURUSD, Amount: 10.0, Duration: 30s
+2025-02-27 10:32:18,276 - deriv_bot.data.deriv_connector - WARNING - API error InputValidationFailed: Input validation failed: price
+2025-02-27 10:32:18,277 - deriv_bot.execution.order_executor - ERROR - Order placement failed: Input validation failed: price
+2025-02-27 10:33:18,285 - __main__ - INFO - Bot running for: 0:03:45.325925
+2025-02-27 10:33:18,977 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 72 candles for frxEURUSD
+2025-02-27 10:33:18,991 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (72, 4)
+2025-02-27 10:33:18,992 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04124, Max: 1.04382
+2025-02-27 10:33:18,992 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00065, Max: 0.00039
+2025-02-27 10:33:19,022 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 71 rows remaining
+2025-02-27 10:33:19,022 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (71, 10)
+2025-02-27 10:33:19,022 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (71, 10)
+2025-02-27 10:33:19,023 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00065253], Max: [0.00039349]
+2025-02-27 10:33:19,024 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 30
+2025-02-27 10:33:19,035 - deriv_bot.data.data_processor - INFO - Creating 41 sequences with length 30
+2025-02-27 10:33:19,036 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (41, 30, 9), y shape: (41,)
+2025-02-27 10:33:19,037 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 10:33:19,037 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 10:33:19,041 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 10:33:19,042 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (41, 30, 46)
+2025-02-27 10:33:19,042 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (41, 30, 46), y shape: (41,)
+2025-02-27 10:33:19,045 - __main__ - INFO - Using short_term model for prediction
+2025-02-27 10:33:19,149 - deriv_bot.strategy.model_predictor - WARNING - Model default prediction 36.75% exceeds normal range
+2025-02-27 10:33:19,150 - deriv_bot.strategy.model_predictor - INFO - Clipped prediction to 0.50%
+2025-02-27 10:33:19,151 - deriv_bot.strategy.model_predictor - INFO - Prediction made - Value: 0.50%, Confidence: 0.70
+2025-02-27 10:33:19,151 - __main__ - INFO - Prediction: 0.50% (confidence: 0.70)
+2025-02-27 10:33:19,152 - deriv_bot.risk.risk_manager - INFO - Demo trade validated - Amount: 30.0, Current daily loss: 0
+2025-02-27 10:33:19,152 - deriv_bot.execution.order_executor - INFO - Placing CALL order - Symbol: frxEURUSD, Amount: 10.0, Duration: 30s
+2025-02-27 10:33:19,277 - deriv_bot.data.deriv_connector - WARNING - API error InputValidationFailed: Input validation failed: price
+2025-02-27 10:33:19,277 - deriv_bot.execution.order_executor - ERROR - Order placement failed: Input validation failed: price
+2025-02-27 10:34:19,274 - __main__ - INFO - Bot running for: 0:04:46.315017
+2025-02-27 10:34:20,033 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 72 candles for frxEURUSD
+2025-02-27 10:34:20,034 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (72, 4)
+2025-02-27 10:34:20,036 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04124, Max: 1.04380
+2025-02-27 10:34:20,037 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00065, Max: 0.00039
+2025-02-27 10:34:20,147 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 71 rows remaining
+2025-02-27 10:34:20,148 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (71, 10)
+2025-02-27 10:34:20,148 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (71, 10)
+2025-02-27 10:34:20,149 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00065253], Max: [0.00039349]
+2025-02-27 10:34:20,150 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 30
+2025-02-27 10:34:20,152 - deriv_bot.data.data_processor - INFO - Creating 41 sequences with length 30
+2025-02-27 10:34:20,153 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (41, 30, 9), y shape: (41,)
+2025-02-27 10:34:20,154 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 10:34:20,154 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 10:34:20,154 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 10:34:20,155 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (41, 30, 46)
+2025-02-27 10:34:20,155 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (41, 30, 46), y shape: (41,)
+2025-02-27 10:34:20,156 - __main__ - INFO - Using short_term model for prediction
+2025-02-27 10:34:20,247 - deriv_bot.strategy.model_predictor - WARNING - Model default prediction 36.53% exceeds normal range
+2025-02-27 10:34:20,247 - deriv_bot.strategy.model_predictor - INFO - Clipped prediction to 0.50%
+2025-02-27 10:34:20,248 - deriv_bot.strategy.model_predictor - INFO - Prediction made - Value: 0.50%, Confidence: 0.70
+2025-02-27 10:34:20,248 - __main__ - INFO - Prediction: 0.50% (confidence: 0.70)
+2025-02-27 10:34:20,248 - deriv_bot.risk.risk_manager - INFO - Demo trade validated - Amount: 30.0, Current daily loss: 0
+2025-02-27 10:34:20,248 - deriv_bot.execution.order_executor - INFO - Placing CALL order - Symbol: frxEURUSD, Amount: 10.0, Duration: 30s
+2025-02-27 10:34:20,365 - deriv_bot.data.deriv_connector - WARNING - API error InputValidationFailed: Input validation failed: price
+2025-02-27 10:34:20,365 - deriv_bot.execution.order_executor - ERROR - Order placement failed: Input validation failed: price
+2025-02-27 10:35:08,742 - __main__ - INFO - Shutdown signal received. Cleaning up...
+2025-02-27 10:35:14,881 - __main__ - INFO - Connection maintenance loop terminated
+2025-02-27 10:35:20,533 - deriv_bot.data.deriv_connector - INFO - Connection closed
+2025-02-27 10:35:20,533 - __main__ - INFO - Connection closed.
+2025-02-27 11:10:46,954 - deriv_bot.utils.config - INFO - Loaded environment from ..\.env
+2025-02-27 11:10:46,954 - deriv_bot.utils.config - INFO - Trading bot initialized in DEMO mode
+2025-02-27 11:10:46,954 - deriv_bot.utils.config - INFO - Environment set to DEMO mode
+2025-02-27 11:10:46,954 - deriv_bot.data.deriv_connector - INFO - DerivConnector initialized in DEMO mode
+2025-02-27 11:10:48,099 - deriv_bot.data.deriv_connector - INFO - API authorization successful - DEMO account
+2025-02-27 11:10:48,099 - deriv_bot.data.deriv_connector - INFO - Account balance: 9962.81 USD
+2025-02-27 11:10:48,099 - deriv_bot.data.deriv_connector - INFO - Successfully connected to Deriv API in DEMO mode
+2025-02-27 11:10:48,099 - deriv_bot.risk.risk_manager - INFO - RiskManager initialized with DEMO profile
+2025-02-27 11:10:48,099 - deriv_bot.risk.risk_manager - INFO - Parameters: max_position=400, max_daily_loss=250, stop_loss=0.08%, risk_multiplier=3.0
+2025-02-27 11:10:48,099 - deriv_bot.utils.model_manager - INFO - ModelManager initialized with max_models=5
+2025-02-27 11:10:48,099 - __main__ - INFO - All components initialized successfully
+2025-02-27 11:10:48,099 - __main__ - INFO - === Starting Deriv ML Trading Bot ===
+2025-02-27 11:10:48,099 - __main__ - INFO - Start time: 2025-02-27 11:10:46.954355
+2025-02-27 11:10:48,099 - __main__ - INFO - Mode: DEMO
+2025-02-27 11:10:48,099 - __main__ - INFO - Symbol: frxEURUSD
+2025-02-27 11:10:48,099 - __main__ - INFO - Trading Parameters:
+2025-02-27 11:10:48,099 - __main__ - INFO - - Stake Amount: 10.0
+2025-02-27 11:10:48,099 - __main__ - INFO - - Duration: 30s
+2025-02-27 11:10:48,099 - __main__ - INFO - - Training Interval: 4.0h
+2025-02-27 11:10:48,099 - __main__ - INFO - - Model Types: ['short_term', 'medium_term', 'long_term']
+2025-02-27 11:10:48,099 - __main__ - INFO - ====================================
+2025-02-27 11:10:48,115 - __main__ - INFO - Loading existing short_term model from models\best_model_short_term.keras
+2025-02-27 11:10:48,557 - deriv_bot.strategy.model_predictor - INFO - Loaded model from models\best_model_short_term.keras
+2025-02-27 11:10:48,557 - deriv_bot.strategy.model_predictor - INFO - Successfully loaded 1 model(s)
+2025-02-27 11:10:48,557 - __main__ - INFO - Loading existing medium_term model from models\best_model_medium_term.keras
+2025-02-27 11:10:48,740 - deriv_bot.strategy.model_predictor - INFO - Loaded model from models\best_model_medium_term.keras
+2025-02-27 11:10:48,740 - deriv_bot.strategy.model_predictor - INFO - Successfully loaded 1 model(s)
+2025-02-27 11:10:48,740 - __main__ - INFO - Loading existing long_term model from models\best_model_long_term.keras
+2025-02-27 11:10:48,902 - deriv_bot.strategy.model_predictor - INFO - Loaded model from models\best_model_long_term.keras
+2025-02-27 11:10:48,902 - deriv_bot.strategy.model_predictor - INFO - Successfully loaded 1 model(s)
+2025-02-27 11:10:48,902 - __main__ - INFO - Bot running for: 0:00:01.947649
+2025-02-27 11:10:48,902 - __main__ - INFO - Starting model retraining cycle...
+2025-02-27 11:10:48,902 - __main__ - INFO - Fetching 1000 historical data points for frxEURUSD from API...
+2025-02-27 11:10:51,102 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 1200 candles for frxEURUSD
+2025-02-27 11:10:51,102 - __main__ - INFO - Successfully fetched 1200 data points from API
+2025-02-27 11:10:51,102 - __main__ - INFO - Training short_term model with 1200 data points
+2025-02-27 11:10:51,102 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (1200, 4)
+2025-02-27 11:10:51,102 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04054, Max: 1.04926
+2025-02-27 11:10:51,102 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00115, Max: 0.00054
+2025-02-27 11:10:51,128 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 1199 rows remaining
+2025-02-27 11:10:51,128 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (1199, 10)
+2025-02-27 11:10:51,128 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (1199, 10)
+2025-02-27 11:10:51,128 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00115015], Max: [0.0005371]
+2025-02-27 11:10:51,128 - deriv_bot.data.data_processor - WARNING - Received None for sequence_length, using default minimum value
+2025-02-27 11:10:51,128 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 10
+2025-02-27 11:10:51,128 - deriv_bot.data.data_processor - INFO - Creating 1189 sequences with length 10
+2025-02-27 11:10:51,177 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (1189, 10, 9), y shape: (1189,)
+2025-02-27 11:10:51,178 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 11:10:51,178 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 11:10:51,185 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 11:10:51,188 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (1189, 10, 46)
+2025-02-27 11:10:51,188 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (1189, 10, 46), y shape: (1189,)
+2025-02-27 11:10:51,188 - __main__ - INFO - Prepared training data with shape X: (1189, 10, 46), y: (1189,)
+2025-02-27 11:10:51,253 - deriv_bot.strategy.model_trainer - INFO - Model trainer initialized with input shape (10, 46) and default epochs 50
+2025-02-27 11:10:51,253 - deriv_bot.strategy.model_trainer - INFO - Training model for 50 epochs with batch size 32
+2025-02-27 11:11:05,048 - deriv_bot.strategy.model_trainer - INFO - Model training completed for short_term model
+2025-02-27 11:11:05,054 - __main__ - INFO - short_term model training completed successfully
+2025-02-27 11:11:05,088 - deriv_bot.utils.model_manager - INFO - Model saved to models\trained_model_short_term_20250227_111105.keras
+2025-02-27 11:11:05,100 - deriv_bot.utils.model_manager - INFO - Model metadata with scaler saved to models\trained_model_short_term_20250227_111105_metadata.pkl
+2025-02-27 11:11:05,100 - deriv_bot.utils.model_manager - INFO - Archiving old models of type: short_term
+2025-02-27 11:11:05,106 - deriv_bot.utils.model_manager - INFO - Keeping 5 recent models, archiving 1 old models
+2025-02-27 11:11:05,107 - deriv_bot.utils.model_manager - INFO - Successfully archived 1 model files
+2025-02-27 11:11:05,108 - __main__ - INFO - Saved short_term model to models\trained_model_short_term_20250227_111105.keras
+2025-02-27 11:11:05,224 - deriv_bot.strategy.model_predictor - INFO - Loaded model from models\trained_model_short_term_20250227_111105.keras
+2025-02-27 11:11:05,224 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_short_term_20250227_111105_metadata.pkl
+2025-02-27 11:11:05,224 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_short_term_20250227_111105_metadata.pkl
+2025-02-27 11:11:05,224 - deriv_bot.strategy.model_predictor - INFO - Successfully loaded 1 model(s)
+2025-02-27 11:11:05,224 - __main__ - INFO - short_term model successfully trained
+2025-02-27 11:11:05,224 - __main__ - INFO - Training medium_term model with 1199 data points
+2025-02-27 11:11:05,224 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (1199, 10)
+2025-02-27 11:11:05,224 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04054, Max: 1.04926
+2025-02-27 11:11:05,240 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00115, Max: 0.00054
+2025-02-27 11:11:05,252 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 1150 rows remaining
+2025-02-27 11:11:05,252 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (1150, 10)
+2025-02-27 11:11:05,252 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (1150, 10)
+2025-02-27 11:11:05,253 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00115015], Max: [0.0005371]
+2025-02-27 11:11:05,254 - deriv_bot.data.data_processor - WARNING - Received None for sequence_length, using default minimum value
+2025-02-27 11:11:05,254 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 10
+2025-02-27 11:11:05,255 - deriv_bot.data.data_processor - INFO - Creating 1140 sequences with length 10
+2025-02-27 11:11:05,279 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (1140, 10, 9), y shape: (1140,)
+2025-02-27 11:11:05,279 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 11:11:05,279 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 11:11:05,288 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 11:11:05,290 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (1140, 10, 46)
+2025-02-27 11:11:05,290 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (1140, 10, 46), y shape: (1140,)
+2025-02-27 11:11:05,290 - __main__ - INFO - Prepared training data with shape X: (1140, 10, 46), y: (1140,)
+2025-02-27 11:11:05,358 - deriv_bot.strategy.model_trainer - INFO - Model trainer initialized with input shape (10, 46) and default epochs 50
+2025-02-27 11:11:05,358 - deriv_bot.strategy.model_trainer - INFO - Training model for 50 epochs with batch size 32
+2025-02-27 11:11:18,937 - deriv_bot.strategy.model_trainer - INFO - Model training completed for medium_term model
+2025-02-27 11:11:18,937 - __main__ - INFO - medium_term model training completed successfully
+2025-02-27 11:11:19,006 - deriv_bot.utils.model_manager - INFO - Model saved to models\trained_model_medium_term_20250227_111118.keras
+2025-02-27 11:11:19,006 - deriv_bot.utils.model_manager - INFO - Model metadata with scaler saved to models\trained_model_medium_term_20250227_111118_metadata.pkl
+2025-02-27 11:11:19,019 - deriv_bot.utils.model_manager - INFO - Archiving old models of type: medium_term
+2025-02-27 11:11:19,023 - deriv_bot.utils.model_manager - INFO - Keeping 5 recent models, archiving 1 old models
+2025-02-27 11:11:19,026 - deriv_bot.utils.model_manager - INFO - Successfully archived 1 model files
+2025-02-27 11:11:19,028 - __main__ - INFO - Saved medium_term model to models\trained_model_medium_term_20250227_111118.keras
+2025-02-27 11:11:19,220 - deriv_bot.strategy.model_predictor - INFO - Loaded model from models\trained_model_medium_term_20250227_111118.keras
+2025-02-27 11:11:19,220 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_medium_term_20250227_111118_metadata.pkl
+2025-02-27 11:11:19,220 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_medium_term_20250227_111118_metadata.pkl
+2025-02-27 11:11:19,220 - deriv_bot.strategy.model_predictor - INFO - Successfully loaded 1 model(s)
+2025-02-27 11:11:19,227 - __main__ - INFO - medium_term model successfully trained
+2025-02-27 11:11:19,227 - __main__ - INFO - Training long_term model with 1150 data points
+2025-02-27 11:11:19,227 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (1150, 10)
+2025-02-27 11:11:19,231 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04054, Max: 1.04926
+2025-02-27 11:11:19,231 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00115, Max: 0.00054
+2025-02-27 11:11:19,243 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 1101 rows remaining
+2025-02-27 11:11:19,243 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (1101, 10)
+2025-02-27 11:11:19,243 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (1101, 10)
+2025-02-27 11:11:19,244 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00115015], Max: [0.0005371]
+2025-02-27 11:11:19,246 - deriv_bot.data.data_processor - WARNING - Received None for sequence_length, using default minimum value
+2025-02-27 11:11:19,246 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 10
+2025-02-27 11:11:19,250 - deriv_bot.data.data_processor - INFO - Creating 1091 sequences with length 10
+2025-02-27 11:11:19,287 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (1091, 10, 9), y shape: (1091,)
+2025-02-27 11:11:19,287 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 11:11:19,287 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 11:11:19,296 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 11:11:19,296 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (1091, 10, 46)
+2025-02-27 11:11:19,296 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (1091, 10, 46), y shape: (1091,)
+2025-02-27 11:11:19,298 - __main__ - INFO - Prepared training data with shape X: (1091, 10, 46), y: (1091,)
+2025-02-27 11:11:19,417 - deriv_bot.strategy.model_trainer - INFO - Model trainer initialized with input shape (10, 46) and default epochs 50
+2025-02-27 11:11:19,419 - deriv_bot.strategy.model_trainer - INFO - Training model for 50 epochs with batch size 32
+2025-02-27 11:11:34,742 - deriv_bot.strategy.model_trainer - ERROR - Error in model training: [Errno 22] Invalid argument: 'models\\best_model_long_term.keras'
+2025-02-27 11:11:34,746 - __main__ - ERROR - long_term model training failed
+2025-02-27 11:11:34,746 - __main__ - ERROR - long_term model training failed
+2025-02-27 11:11:34,748 - __main__ - WARNING - Some models failed to train
+2025-02-27 11:11:35,637 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 72 candles for frxEURUSD
+2025-02-27 11:11:35,637 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (72, 4)
+2025-02-27 11:11:35,637 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04057, Max: 1.04274
+2025-02-27 11:11:35,653 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00065, Max: 0.00044
+2025-02-27 11:11:35,661 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 71 rows remaining
+2025-02-27 11:11:35,662 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (71, 10)
+2025-02-27 11:11:35,662 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (71, 10)
+2025-02-27 11:11:35,664 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00065253], Max: [0.00044189]
+2025-02-27 11:11:35,665 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 30
+2025-02-27 11:11:35,666 - deriv_bot.data.data_processor - INFO - Creating 41 sequences with length 30
+2025-02-27 11:11:35,668 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (41, 30, 9), y shape: (41,)
+2025-02-27 11:11:35,668 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -0.29882, Max: 1.00000
+2025-02-27 11:11:35,668 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 11:11:35,668 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 11:11:35,671 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (41, 30, 46)
+2025-02-27 11:11:35,671 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (41, 30, 46), y shape: (41,)
+2025-02-27 11:11:35,673 - __main__ - INFO - Using short_term model for prediction
+2025-02-27 11:11:36,131 - deriv_bot.strategy.model_predictor - WARNING - Model default prediction 34.08% exceeds normal range
+2025-02-27 11:11:36,131 - deriv_bot.strategy.model_predictor - INFO - Clipped prediction to 0.50%
+2025-02-27 11:11:36,133 - deriv_bot.strategy.model_predictor - INFO - Prediction made - Value: 0.50%, Confidence: 0.70
+2025-02-27 11:11:36,133 - __main__ - INFO - Prediction: 0.50% (confidence: 0.70)
+2025-02-27 11:11:36,133 - deriv_bot.risk.risk_manager - INFO - Demo trade validated - Amount: 30.0, Current daily loss: 0
+2025-02-27 11:11:36,135 - deriv_bot.execution.order_executor - INFO - Placing CALL order - Symbol: frxEURUSD, Amount: 10.0, Duration: 30s
+2025-02-27 11:11:36,266 - deriv_bot.data.deriv_connector - WARNING - API error InputValidationFailed: Input validation failed: price
+2025-02-27 11:11:36,266 - deriv_bot.execution.order_executor - ERROR - Order placement failed: Input validation failed: price
+2025-02-27 11:11:36,266 - __main__ - INFO - 
+=== Hourly Performance Update ===
+2025-02-27 11:11:36,269 - __main__ - INFO - Total Runtime: 0:00:01.947649
+2025-02-27 11:11:36,269 - __main__ - INFO - Performance Metrics: {'total_trades': 0, 'wins': 0, 'losses': 0, 'win_rate': 0, 'total_profit': 0, 'max_drawdown': 0, 'avg_prediction_error': 0, 'direction_accuracy': 0, 'avg_profit_per_trade': 0, 'profit_factor': 0, 'sharpe_ratio': 0}
+2025-02-27 11:11:36,271 - __main__ - INFO - =================================
+2025-02-27 11:12:36,273 - __main__ - INFO - Bot running for: 0:01:49.319578
+2025-02-27 11:12:36,273 - __main__ - INFO - Starting model retraining cycle...
+2025-02-27 11:12:36,273 - __main__ - INFO - Fetching 1000 historical data points for frxEURUSD from API...
+2025-02-27 11:12:37,566 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 1200 candles for frxEURUSD
+2025-02-27 11:12:37,566 - __main__ - INFO - Successfully fetched 1200 data points from API
+2025-02-27 11:12:37,566 - __main__ - INFO - Training short_term model with 1200 data points
+2025-02-27 11:12:37,566 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (1200, 4)
+2025-02-27 11:12:37,579 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04057, Max: 1.04926
+2025-02-27 11:12:37,579 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00115, Max: 0.00054
+2025-02-27 11:12:37,588 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 1199 rows remaining
+2025-02-27 11:12:37,588 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (1199, 10)
+2025-02-27 11:12:37,588 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (1199, 10)
+2025-02-27 11:12:37,590 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00115015], Max: [0.0005371]
+2025-02-27 11:12:37,591 - deriv_bot.data.data_processor - WARNING - Received None for sequence_length, using default minimum value
+2025-02-27 11:12:37,591 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 10
+2025-02-27 11:12:37,592 - deriv_bot.data.data_processor - INFO - Creating 1189 sequences with length 10
+2025-02-27 11:12:37,622 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (1189, 10, 9), y shape: (1189,)
+2025-02-27 11:12:37,622 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 11:12:37,622 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 11:12:37,622 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 11:12:37,622 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (1189, 10, 46)
+2025-02-27 11:12:37,622 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (1189, 10, 46), y shape: (1189,)
+2025-02-27 11:12:37,622 - __main__ - INFO - Prepared training data with shape X: (1189, 10, 46), y: (1189,)
+2025-02-27 11:12:37,690 - deriv_bot.strategy.model_trainer - INFO - Model trainer initialized with input shape (10, 46) and default epochs 50
+2025-02-27 11:12:37,690 - deriv_bot.strategy.model_trainer - INFO - Training model for 50 epochs with batch size 32
+2025-02-27 11:12:46,653 - deriv_bot.strategy.model_trainer - INFO - Model training completed for short_term model
+2025-02-27 11:12:46,654 - __main__ - INFO - short_term model training completed successfully
+2025-02-27 11:12:46,715 - deriv_bot.utils.model_manager - INFO - Model saved to models\trained_model_short_term_20250227_111246.keras
+2025-02-27 11:12:46,715 - deriv_bot.utils.model_manager - INFO - Model metadata with scaler saved to models\trained_model_short_term_20250227_111246_metadata.pkl
+2025-02-27 11:12:46,715 - deriv_bot.utils.model_manager - INFO - Archiving old models of type: short_term
+2025-02-27 11:12:46,715 - deriv_bot.utils.model_manager - INFO - Keeping 5 recent models, archiving 1 old models
+2025-02-27 11:12:46,715 - deriv_bot.utils.model_manager - INFO - Successfully archived 1 model files
+2025-02-27 11:12:46,715 - __main__ - INFO - Saved short_term model to models\trained_model_short_term_20250227_111246.keras
+2025-02-27 11:12:46,934 - deriv_bot.strategy.model_predictor - INFO - Loaded model from models\trained_model_short_term_20250227_111246.keras
+2025-02-27 11:12:46,936 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_short_term_20250227_111246_metadata.pkl
+2025-02-27 11:12:46,937 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_short_term_20250227_111246_metadata.pkl
+2025-02-27 11:12:46,937 - deriv_bot.strategy.model_predictor - INFO - Successfully loaded 1 model(s)
+2025-02-27 11:12:46,937 - __main__ - INFO - short_term model successfully trained
+2025-02-27 11:12:46,938 - __main__ - INFO - Training medium_term model with 1199 data points
+2025-02-27 11:12:46,938 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (1199, 10)
+2025-02-27 11:12:46,945 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04057, Max: 1.04926
+2025-02-27 11:12:46,946 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00115, Max: 0.00054
+2025-02-27 11:12:46,958 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 1150 rows remaining
+2025-02-27 11:12:46,959 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (1150, 10)
+2025-02-27 11:12:46,959 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (1150, 10)
+2025-02-27 11:12:46,959 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00115015], Max: [0.0005371]
+2025-02-27 11:12:46,959 - deriv_bot.data.data_processor - WARNING - Received None for sequence_length, using default minimum value
+2025-02-27 11:12:46,959 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 10
+2025-02-27 11:12:46,959 - deriv_bot.data.data_processor - INFO - Creating 1140 sequences with length 10
+2025-02-27 11:12:46,995 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (1140, 10, 9), y shape: (1140,)
+2025-02-27 11:12:46,995 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 11:12:46,995 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 11:12:46,995 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 11:12:47,010 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (1140, 10, 46)
+2025-02-27 11:12:47,011 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (1140, 10, 46), y shape: (1140,)
+2025-02-27 11:12:47,011 - __main__ - INFO - Prepared training data with shape X: (1140, 10, 46), y: (1140,)
+2025-02-27 11:12:47,103 - deriv_bot.strategy.model_trainer - INFO - Model trainer initialized with input shape (10, 46) and default epochs 50
+2025-02-27 11:12:47,104 - deriv_bot.strategy.model_trainer - INFO - Training model for 50 epochs with batch size 32
+2025-02-27 11:12:58,510 - deriv_bot.strategy.model_trainer - INFO - Model training completed for medium_term model
+2025-02-27 11:12:58,512 - __main__ - INFO - medium_term model training completed successfully
+2025-02-27 11:12:58,569 - deriv_bot.utils.model_manager - INFO - Model saved to models\trained_model_medium_term_20250227_111258.keras
+2025-02-27 11:12:58,569 - deriv_bot.utils.model_manager - INFO - Model metadata with scaler saved to models\trained_model_medium_term_20250227_111258_metadata.pkl
+2025-02-27 11:12:58,569 - deriv_bot.utils.model_manager - INFO - Archiving old models of type: medium_term
+2025-02-27 11:12:58,580 - deriv_bot.utils.model_manager - INFO - Keeping 5 recent models, archiving 1 old models
+2025-02-27 11:12:58,584 - deriv_bot.utils.model_manager - INFO - Successfully archived 1 model files
+2025-02-27 11:12:58,585 - __main__ - INFO - Saved medium_term model to models\trained_model_medium_term_20250227_111258.keras
+2025-02-27 11:12:58,777 - deriv_bot.strategy.model_predictor - INFO - Loaded model from models\trained_model_medium_term_20250227_111258.keras
+2025-02-27 11:12:58,780 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_medium_term_20250227_111258_metadata.pkl
+2025-02-27 11:12:58,781 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_medium_term_20250227_111258_metadata.pkl
+2025-02-27 11:12:58,781 - deriv_bot.strategy.model_predictor - INFO - Successfully loaded 1 model(s)
+2025-02-27 11:12:58,781 - __main__ - INFO - medium_term model successfully trained
+2025-02-27 11:12:58,782 - __main__ - INFO - Training long_term model with 1150 data points
+2025-02-27 11:12:58,782 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (1150, 10)
+2025-02-27 11:12:58,784 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04057, Max: 1.04926
+2025-02-27 11:12:58,784 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00115, Max: 0.00054
+2025-02-27 11:12:58,790 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 1101 rows remaining
+2025-02-27 11:12:58,790 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (1101, 10)
+2025-02-27 11:12:58,791 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (1101, 10)
+2025-02-27 11:12:58,793 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00115015], Max: [0.0005371]
+2025-02-27 11:12:58,794 - deriv_bot.data.data_processor - WARNING - Received None for sequence_length, using default minimum value
+2025-02-27 11:12:58,794 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 10
+2025-02-27 11:12:58,796 - deriv_bot.data.data_processor - INFO - Creating 1091 sequences with length 10
+2025-02-27 11:12:58,824 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (1091, 10, 9), y shape: (1091,)
+2025-02-27 11:12:58,824 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 11:12:58,824 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 11:12:58,824 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 11:12:58,824 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (1091, 10, 46)
+2025-02-27 11:12:58,824 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (1091, 10, 46), y shape: (1091,)
+2025-02-27 11:12:58,824 - __main__ - INFO - Prepared training data with shape X: (1091, 10, 46), y: (1091,)
+2025-02-27 11:12:58,893 - deriv_bot.strategy.model_trainer - INFO - Model trainer initialized with input shape (10, 46) and default epochs 50
+2025-02-27 11:12:58,894 - deriv_bot.strategy.model_trainer - INFO - Training model for 50 epochs with batch size 32
+2025-02-27 11:13:17,179 - deriv_bot.strategy.model_trainer - INFO - Model training completed for long_term model
+2025-02-27 11:13:17,179 - __main__ - INFO - long_term model training completed successfully
+2025-02-27 11:13:17,241 - deriv_bot.utils.model_manager - INFO - Model saved to models\trained_model_long_term_20250227_111317.keras
+2025-02-27 11:13:17,242 - deriv_bot.utils.model_manager - INFO - Model metadata with scaler saved to models\trained_model_long_term_20250227_111317_metadata.pkl
+2025-02-27 11:13:17,244 - deriv_bot.utils.model_manager - INFO - Archiving old models of type: long_term
+2025-02-27 11:13:17,246 - deriv_bot.utils.model_manager - INFO - Keeping 5 recent models, archiving 1 old models
+2025-02-27 11:13:17,248 - deriv_bot.utils.model_manager - INFO - Successfully archived 1 model files
+2025-02-27 11:13:17,249 - __main__ - INFO - Saved long_term model to models\trained_model_long_term_20250227_111317.keras
+2025-02-27 11:13:17,415 - deriv_bot.strategy.model_predictor - INFO - Loaded model from models\trained_model_long_term_20250227_111317.keras
+2025-02-27 11:13:17,415 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_long_term_20250227_111317_metadata.pkl
+2025-02-27 11:13:17,415 - deriv_bot.strategy.model_predictor - INFO - Loaded scaler from models\trained_model_long_term_20250227_111317_metadata.pkl
+2025-02-27 11:13:17,415 - deriv_bot.strategy.model_predictor - INFO - Successfully loaded 1 model(s)
+2025-02-27 11:13:17,415 - __main__ - INFO - long_term model successfully trained
+2025-02-27 11:13:17,415 - __main__ - INFO - All models successfully retrained
+2025-02-27 11:13:17,415 - __main__ - INFO - Next training scheduled for: 2025-02-27 15:12:36.273933
+2025-02-27 11:13:18,334 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 72 candles for frxEURUSD
+2025-02-27 11:13:18,334 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (72, 4)
+2025-02-27 11:13:18,350 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04057, Max: 1.04274
+2025-02-27 11:13:18,350 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00065, Max: 0.00044
+2025-02-27 11:13:18,359 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 71 rows remaining
+2025-02-27 11:13:18,359 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (71, 10)
+2025-02-27 11:13:18,359 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (71, 10)
+2025-02-27 11:13:18,361 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00065253], Max: [0.00044189]
+2025-02-27 11:13:18,362 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 30
+2025-02-27 11:13:18,362 - deriv_bot.data.data_processor - INFO - Creating 41 sequences with length 30
+2025-02-27 11:13:18,363 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (41, 30, 9), y shape: (41,)
+2025-02-27 11:13:18,364 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -0.29882, Max: 1.00000
+2025-02-27 11:13:18,364 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 11:13:18,364 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 11:13:18,364 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (41, 30, 46)
+2025-02-27 11:13:18,365 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (41, 30, 46), y shape: (41,)
+2025-02-27 11:13:18,365 - __main__ - INFO - Using short_term model for prediction
+2025-02-27 11:13:18,684 - deriv_bot.strategy.model_predictor - WARNING - Model default prediction 32.20% exceeds normal range
+2025-02-27 11:13:18,684 - deriv_bot.strategy.model_predictor - INFO - Clipped prediction to 0.50%
+2025-02-27 11:13:18,684 - deriv_bot.strategy.model_predictor - INFO - Prediction made - Value: 0.50%, Confidence: 0.70
+2025-02-27 11:13:18,684 - __main__ - INFO - Prediction: 0.50% (confidence: 0.70)
+2025-02-27 11:13:18,684 - deriv_bot.risk.risk_manager - INFO - Demo trade validated - Amount: 30.0, Current daily loss: 0
+2025-02-27 11:13:18,684 - deriv_bot.execution.order_executor - INFO - Placing CALL order - Symbol: frxEURUSD, Amount: 10.0, Duration: 30s
+2025-02-27 11:13:18,824 - deriv_bot.data.deriv_connector - WARNING - API error InputValidationFailed: Input validation failed: price
+2025-02-27 11:13:18,824 - deriv_bot.execution.order_executor - ERROR - Order placement failed: Input validation failed: price
+2025-02-27 11:14:18,836 - __main__ - INFO - Bot running for: 0:03:31.882066
+2025-02-27 11:14:19,509 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 72 candles for frxEURUSD
+2025-02-27 11:14:19,509 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (72, 4)
+2025-02-27 11:14:19,524 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04057, Max: 1.04274
+2025-02-27 11:14:19,524 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00065, Max: 0.00044
+2025-02-27 11:14:19,524 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 71 rows remaining
+2025-02-27 11:14:19,524 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (71, 10)
+2025-02-27 11:14:19,534 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (71, 10)
+2025-02-27 11:14:19,535 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00065253], Max: [0.00044189]
+2025-02-27 11:14:19,535 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 30
+2025-02-27 11:14:19,536 - deriv_bot.data.data_processor - INFO - Creating 41 sequences with length 30
+2025-02-27 11:14:19,539 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (41, 30, 9), y shape: (41,)
+2025-02-27 11:14:19,540 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -0.29882, Max: 1.00000
+2025-02-27 11:14:19,540 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 11:14:19,541 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 11:14:19,541 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (41, 30, 46)
+2025-02-27 11:14:19,542 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (41, 30, 46), y shape: (41,)
+2025-02-27 11:14:19,542 - __main__ - INFO - Using short_term model for prediction
+2025-02-27 11:14:19,620 - deriv_bot.strategy.model_predictor - WARNING - Model default prediction 33.20% exceeds normal range
+2025-02-27 11:14:19,620 - deriv_bot.strategy.model_predictor - INFO - Clipped prediction to 0.50%
+2025-02-27 11:14:19,620 - deriv_bot.strategy.model_predictor - INFO - Prediction made - Value: 0.50%, Confidence: 0.70
+2025-02-27 11:14:19,620 - __main__ - INFO - Prediction: 0.50% (confidence: 0.70)
+2025-02-27 11:14:19,620 - deriv_bot.risk.risk_manager - INFO - Demo trade validated - Amount: 30.0, Current daily loss: 0
+2025-02-27 11:14:19,620 - deriv_bot.execution.order_executor - INFO - Placing CALL order - Symbol: frxEURUSD, Amount: 10.0, Duration: 30s
+2025-02-27 11:14:19,744 - deriv_bot.data.deriv_connector - WARNING - API error InputValidationFailed: Input validation failed: price
+2025-02-27 11:14:19,744 - deriv_bot.execution.order_executor - ERROR - Order placement failed: Input validation failed: price
+2025-02-27 11:15:19,742 - __main__ - INFO - Bot running for: 0:04:32.788130
+2025-02-27 11:15:20,572 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 72 candles for frxEURUSD
+2025-02-27 11:15:20,573 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (72, 4)
+2025-02-27 11:15:20,577 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04057, Max: 1.04274
+2025-02-27 11:15:20,578 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00065, Max: 0.00044
+2025-02-27 11:15:20,588 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 71 rows remaining
+2025-02-27 11:15:20,589 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (71, 10)
+2025-02-27 11:15:20,589 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (71, 10)
+2025-02-27 11:15:20,590 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00065253], Max: [0.00044189]
+2025-02-27 11:15:20,590 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 30
+2025-02-27 11:15:20,590 - deriv_bot.data.data_processor - INFO - Creating 41 sequences with length 30
+2025-02-27 11:15:20,594 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (41, 30, 9), y shape: (41,)
+2025-02-27 11:15:20,594 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -0.29882, Max: 1.00000
+2025-02-27 11:15:20,595 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 11:15:20,595 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 11:15:20,596 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (41, 30, 46)
+2025-02-27 11:15:20,596 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (41, 30, 46), y shape: (41,)
+2025-02-27 11:15:20,597 - __main__ - INFO - Using short_term model for prediction
+2025-02-27 11:15:20,778 - deriv_bot.strategy.model_predictor - WARNING - Model default prediction 33.73% exceeds normal range
+2025-02-27 11:15:20,787 - deriv_bot.strategy.model_predictor - INFO - Clipped prediction to 0.50%
+2025-02-27 11:15:20,788 - deriv_bot.strategy.model_predictor - INFO - Prediction made - Value: 0.50%, Confidence: 0.70
+2025-02-27 11:15:20,789 - __main__ - INFO - Prediction: 0.50% (confidence: 0.70)
+2025-02-27 11:15:20,790 - deriv_bot.risk.risk_manager - INFO - Demo trade validated - Amount: 30.0, Current daily loss: 0
+2025-02-27 11:15:20,802 - deriv_bot.execution.order_executor - INFO - Placing CALL order - Symbol: frxEURUSD, Amount: 10.0, Duration: 30s
+2025-02-27 11:15:20,937 - deriv_bot.data.deriv_connector - WARNING - API error InputValidationFailed: Input validation failed: price
+2025-02-27 11:15:20,941 - deriv_bot.execution.order_executor - ERROR - Order placement failed: Input validation failed: price
+2025-02-27 11:16:20,942 - __main__ - INFO - Bot running for: 0:05:33.987873
+2025-02-27 11:16:21,620 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 72 candles for frxEURUSD
+2025-02-27 11:16:21,624 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (72, 4)
+2025-02-27 11:16:21,624 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04057, Max: 1.04274
+2025-02-27 11:16:21,624 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00065, Max: 0.00044
+2025-02-27 11:16:21,637 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 71 rows remaining
+2025-02-27 11:16:21,637 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (71, 10)
+2025-02-27 11:16:21,637 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (71, 10)
+2025-02-27 11:16:21,640 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00065253], Max: [0.00044189]
+2025-02-27 11:16:21,641 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 30
+2025-02-27 11:16:21,641 - deriv_bot.data.data_processor - INFO - Creating 41 sequences with length 30
+2025-02-27 11:16:21,643 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (41, 30, 9), y shape: (41,)
+2025-02-27 11:16:21,643 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -0.29882, Max: 1.00000
+2025-02-27 11:16:21,643 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 11:16:21,644 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 11:16:21,644 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (41, 30, 46)
+2025-02-27 11:16:21,644 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (41, 30, 46), y shape: (41,)
+2025-02-27 11:16:21,644 - __main__ - INFO - Using short_term model for prediction
+2025-02-27 11:16:21,734 - deriv_bot.strategy.model_predictor - WARNING - Model default prediction 34.02% exceeds normal range
+2025-02-27 11:16:21,734 - deriv_bot.strategy.model_predictor - INFO - Clipped prediction to 0.50%
+2025-02-27 11:16:21,735 - deriv_bot.strategy.model_predictor - INFO - Prediction made - Value: 0.50%, Confidence: 0.70
+2025-02-27 11:16:21,735 - __main__ - INFO - Prediction: 0.50% (confidence: 0.70)
+2025-02-27 11:16:21,735 - deriv_bot.risk.risk_manager - INFO - Demo trade validated - Amount: 30.0, Current daily loss: 0
+2025-02-27 11:16:21,735 - deriv_bot.execution.order_executor - INFO - Placing CALL order - Symbol: frxEURUSD, Amount: 10.0, Duration: 30s
+2025-02-27 11:16:21,969 - deriv_bot.data.deriv_connector - WARNING - API error InputValidationFailed: Input validation failed: price
+2025-02-27 11:16:21,969 - deriv_bot.execution.order_executor - ERROR - Order placement failed: Input validation failed: price
+2025-02-27 11:17:21,970 - __main__ - INFO - Bot running for: 0:06:35.016121
+2025-02-27 11:17:22,724 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 72 candles for frxEURUSD
+2025-02-27 11:17:22,724 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (72, 4)
+2025-02-27 11:17:22,739 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04057, Max: 1.04274
+2025-02-27 11:17:22,739 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00065, Max: 0.00044
+2025-02-27 11:17:22,750 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 71 rows remaining
+2025-02-27 11:17:22,750 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (71, 10)
+2025-02-27 11:17:22,751 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (71, 10)
+2025-02-27 11:17:22,753 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00065253], Max: [0.00044189]
+2025-02-27 11:17:22,753 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 30
+2025-02-27 11:17:22,755 - deriv_bot.data.data_processor - INFO - Creating 41 sequences with length 30
+2025-02-27 11:17:22,757 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (41, 30, 9), y shape: (41,)
+2025-02-27 11:17:22,758 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -0.29882, Max: 1.00000
+2025-02-27 11:17:22,758 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 11:17:22,759 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 11:17:22,760 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (41, 30, 46)
+2025-02-27 11:17:22,760 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (41, 30, 46), y shape: (41,)
+2025-02-27 11:17:22,761 - __main__ - INFO - Using short_term model for prediction
+2025-02-27 11:17:22,864 - deriv_bot.strategy.model_predictor - WARNING - Model default prediction 34.50% exceeds normal range
+2025-02-27 11:17:22,864 - deriv_bot.strategy.model_predictor - INFO - Clipped prediction to 0.50%
+2025-02-27 11:17:22,864 - deriv_bot.strategy.model_predictor - INFO - Prediction made - Value: 0.50%, Confidence: 0.70
+2025-02-27 11:17:22,867 - __main__ - INFO - Prediction: 0.50% (confidence: 0.70)
+2025-02-27 11:17:22,867 - deriv_bot.risk.risk_manager - INFO - Demo trade validated - Amount: 30.0, Current daily loss: 0
+2025-02-27 11:17:22,867 - deriv_bot.execution.order_executor - INFO - Placing CALL order - Symbol: frxEURUSD, Amount: 10.0, Duration: 30s
+2025-02-27 11:17:22,993 - deriv_bot.data.deriv_connector - WARNING - API error InputValidationFailed: Input validation failed: price
+2025-02-27 11:17:22,993 - deriv_bot.execution.order_executor - ERROR - Order placement failed: Input validation failed: price
+2025-02-27 11:18:23,004 - __main__ - INFO - Bot running for: 0:07:36.049994
+2025-02-27 11:18:23,680 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 72 candles for frxEURUSD
+2025-02-27 11:18:23,680 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (72, 4)
+2025-02-27 11:18:23,680 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04057, Max: 1.04274
+2025-02-27 11:18:23,680 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00065, Max: 0.00044
+2025-02-27 11:18:23,701 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 71 rows remaining
+2025-02-27 11:18:23,701 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (71, 10)
+2025-02-27 11:18:23,701 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (71, 10)
+2025-02-27 11:18:23,704 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00065253], Max: [0.00044189]
+2025-02-27 11:18:23,704 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 30
+2025-02-27 11:18:23,705 - deriv_bot.data.data_processor - INFO - Creating 41 sequences with length 30
+2025-02-27 11:18:23,705 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (41, 30, 9), y shape: (41,)
+2025-02-27 11:18:23,706 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -0.29882, Max: 1.00000
+2025-02-27 11:18:23,706 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 11:18:23,706 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 11:18:23,707 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (41, 30, 46)
+2025-02-27 11:18:23,707 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (41, 30, 46), y shape: (41,)
+2025-02-27 11:18:23,708 - __main__ - INFO - Using short_term model for prediction
+2025-02-27 11:18:23,806 - deriv_bot.strategy.model_predictor - WARNING - Model default prediction 34.82% exceeds normal range
+2025-02-27 11:18:23,806 - deriv_bot.strategy.model_predictor - INFO - Clipped prediction to 0.50%
+2025-02-27 11:18:23,806 - deriv_bot.strategy.model_predictor - INFO - Prediction made - Value: 0.50%, Confidence: 0.70
+2025-02-27 11:18:23,806 - __main__ - INFO - Prediction: 0.50% (confidence: 0.70)
+2025-02-27 11:18:23,806 - deriv_bot.risk.risk_manager - INFO - Demo trade validated - Amount: 30.0, Current daily loss: 0
+2025-02-27 11:18:23,806 - deriv_bot.execution.order_executor - INFO - Placing CALL order - Symbol: frxEURUSD, Amount: 10.0, Duration: 30s
+2025-02-27 11:18:24,025 - deriv_bot.data.deriv_connector - WARNING - API error InputValidationFailed: Input validation failed: price
+2025-02-27 11:18:24,025 - deriv_bot.execution.order_executor - ERROR - Order placement failed: Input validation failed: price
+2025-02-27 11:19:24,033 - __main__ - INFO - Bot running for: 0:08:37.079250
+2025-02-27 11:19:24,725 - deriv_bot.data.data_fetcher - INFO - Successfully fetched 72 candles for frxEURUSD
+2025-02-27 11:19:24,725 - deriv_bot.data.data_processor - INFO - Preparing data with shape: (72, 4)
+2025-02-27 11:19:24,725 - deriv_bot.data.data_processor - INFO - Price range - Min: 1.04057, Max: 1.04274
+2025-02-27 11:19:24,725 - deriv_bot.data.data_processor - INFO - Returns range - Min: -0.00027, Max: 0.00044
+2025-02-27 11:19:24,742 - deriv_bot.data.data_processor - INFO - Dropped NaN values, 71 rows remaining
+2025-02-27 11:19:24,742 - deriv_bot.data.data_processor - INFO - Indicator calculation complete. Shape: (71, 10)
+2025-02-27 11:19:24,743 - deriv_bot.data.data_processor - INFO - Data shape after indicators: (71, 10)
+2025-02-27 11:19:24,744 - deriv_bot.data.data_processor - INFO - Returns scaling params - Min: [-0.00026884], Max: [0.00044189]
+2025-02-27 11:19:24,745 - deriv_bot.data.data_processor - INFO - Using requested sequence length: 30
+2025-02-27 11:19:24,746 - deriv_bot.data.data_processor - INFO - Creating 41 sequences with length 30
+2025-02-27 11:19:24,749 - deriv_bot.data.data_processor - INFO - Sequence stats - X shape: (41, 30, 9), y shape: (41,)
+2025-02-27 11:19:24,749 - deriv_bot.data.data_processor - INFO - Target returns range - Min: -1.00000, Max: 1.00000
+2025-02-27 11:19:24,749 - deriv_bot.data.data_processor - WARNING - Feature dimension mismatch: got 9, expected 46
+2025-02-27 11:19:24,750 - deriv_bot.data.data_processor - INFO - Padded features from 9 to 46
+2025-02-27 11:19:24,750 - deriv_bot.data.data_processor - INFO - Adjusted feature dimensions to match model expectations: (41, 30, 46)
+2025-02-27 11:19:24,750 - deriv_bot.data.data_processor - INFO - Created sequences - X shape: (41, 30, 46), y shape: (41,)
+2025-02-27 11:19:24,751 - __main__ - INFO - Using short_term model for prediction
+2025-02-27 11:19:24,904 - deriv_bot.strategy.model_predictor - WARNING - Model default prediction 34.96% exceeds normal range
+2025-02-27 11:19:24,904 - deriv_bot.strategy.model_predictor - INFO - Clipped prediction to 0.50%
+2025-02-27 11:19:24,905 - deriv_bot.strategy.model_predictor - INFO - Prediction made - Value: 0.50%, Confidence: 0.70
+2025-02-27 11:19:24,905 - __main__ - INFO - Prediction: 0.50% (confidence: 0.70)
+2025-02-27 11:19:24,906 - deriv_bot.risk.risk_manager - INFO - Demo trade validated - Amount: 30.0, Current daily loss: 0
+2025-02-27 11:19:24,906 - deriv_bot.execution.order_executor - INFO - Placing CALL order - Symbol: frxEURUSD, Amount: 10.0, Duration: 30s
+2025-02-27 11:19:25,019 - deriv_bot.data.deriv_connector - WARNING - API error InputValidationFailed: Input validation failed: price
+2025-02-27 11:19:25,019 - deriv_bot.execution.order_executor - ERROR - Order placement failed: Input validation failed: price
+2025-02-27 11:20:08,418 - __main__ - INFO - Shutdown signal received. Cleaning up...
+2025-02-27 11:20:17,575 - __main__ - INFO - Connection maintenance loop terminated
+2025-02-27 11:20:25,177 - deriv_bot.data.deriv_connector - INFO - Connection closed
+2025-02-27 11:20:25,177 - __main__ - INFO - Connection closed.
